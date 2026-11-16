@@ -1,0 +1,52 @@
+{
+  "ticket_id": "2b22debc-12fa-4af6-b459-4d4a8a6e94b8",
+  "artifact": "fingerseg.onnx",
+  "weights_status": "unset",
+  "postprocess": {
+    "threshold": 0.5,
+    "outer_cc": "border_touching_only",
+    "dilation_ratio": 0.004,
+    "inpaint_default": "telea",
+    "inpaint_alternate": "ns",
+    "module": "scanbooks_engine.finger_pipeline"
+  },
+  "candidates": [
+    {
+      "id": "A",
+      "name": "custom_mobilenetv3_unet_binary",
+      "verdict": "primary_target",
+      "weights_shipped": false
+    },
+    {
+      "id": "B",
+      "name": "deeplabv3plus_mobilenetv2_finetune",
+      "verdict": "backup",
+      "weights_shipped": false
+    },
+    {
+      "id": "C",
+      "name": "academic_fingerseg_visigrapp2024",
+      "verdict": "reject_wrong_task",
+      "weights_shipped": false
+    },
+    {
+      "id": "D",
+      "name": "u2net_saliency",
+      "verdict": "reject_domain_mismatch",
+      "weights_shipped": false
+    },
+    {
+      "id": "E",
+      "name": "mediapipe_hands_only",
+      "verdict": "reject_contract_1_7",
+      "weights_shipped": false
+    },
+    {
+      "id": "stub",
+      "name": "skin_chroma_outer_cc",
+      "verdict": "interim_benches_only",
+      "weights_shipped": false
+    }
+  ],
+  "recommendation": "ship_postprocess_now; train_export_A_next; keep_telea_parity"
+}

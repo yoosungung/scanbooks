@@ -32,24 +32,10 @@ def mean_chroma(image: np.ndarray, mask: np.ndarray) -> float:
 
 def outer_cc_finger_mask(prob_or_binary: np.ndarray) -> np.ndarray:
     """Keep connected components that touch the image border (ARCHITECTURE §1.7)."""
-    cv = _cv()
-    binary = (prob_or_binary > 0).astype(np.uint8) * 255
-    n, labels, stats, _ = cv.connectedComponentsWithStats(binary, connectivity=8)
-    h, w = binary.shape
-    out = np.zeros_like(binary)
-    for i in range(1, n):
-        ys, xs = np.where(labels == i)
-        if ys.size == 0:
-            continue
-        touches = (
-            np.any(ys == 0)
-            or np.any(ys == h - 1)
-            or np.any(xs == 0)
-            or np.any(xs == w - 1)
-        )
-        if touches:
-            out[labels == i] = 255
-    return out
+    from scanbooks_engine.finger_pipeline import outer_cc_filter
+
+    # Stub detector emits 0/255; threshold 0 keeps historical >0 semantics.
+    return outer_cc_filter(prob_or_binary, threshold=0.0)
 
 
 def detect_finger_stub(image: np.ndarray) -> np.ndarray:

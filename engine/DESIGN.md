@@ -21,16 +21,17 @@ engine/
     export_doctr.py
     preprocess.py         # RGB→NCHW /255 @ 288
     geo_warp.py           # upsample flow + grid_sample / remap
-    finger_inpaint.py     # Telea 레퍼런스 (raw_mask→inpainted)
+    finger_inpaint.py     # Telea/NS 레퍼런스 (raw_mask→inpainted; 파리티=Telea)
+    finger_pipeline.py    # 임계값 → 외곽 CC → dilate(k·workLongEdge) → inpaint
     parity_fixtures.py    # fixtures/parity 발행·로드
     crop.py / golden.py / stage_order.py / experiment_matrix.py
     quantize.py           # weight-only INT8 / dynamic; static 기본 금지
     ill_patches.py        # (예정) 128 패치·overlap·batch ORT·stitch
-    finger_pipeline.py    # (예정) 외곽 CC 필터 + dilation
   tests/
     test_preprocess.py
     test_geo_warp_parity.py
     test_finger_inpaint_parity.py
+    test_finger_pipeline.py
     test_parity_fixtures.py
     test_crop_c1.py / test_stage_order_s1.py / test_export_contracts.py
     fixtures/
@@ -38,6 +39,7 @@ engine/
       parity/             # 전처리 텐서 + raw_flow/warped + raw_mask/inpainted
   benches/
     latency.md            # (예정)
+    fingerseg_candidates.md
     quantize_candidates.md
     experiment_matrix.md
     export_prototype.md
@@ -90,8 +92,10 @@ GeoTr에 work 해상도 텐서를 넣지 않는다.
 ## FingerSeg
 
 - 입력: **geo 출력**(ill 전)
-- 후처리: 임계값 → **이미지 외곽과 맞닿은 CC만 채택** → dilation 반경 = `k * workLongEdge` → Telea/NS
-- 본문 인쇄 손/얼굴 오탐을 골든 세트에 넣어 회귀
+- 후처리: 임계값(`0.5`) → **이미지 외곽과 맞닿은 CC만 채택** → dilation 반경 = `FINGER_DILATION_RATIO * workLongEdge`(`0.004` → ~4px@1024) → Telea(기본·파리티) / NS(대안)
+- 구현: `finger_pipeline.remove_fingers` · 후보·거절 사유: [benches/fingerseg_candidates.md](benches/fingerseg_candidates.md)
+- 본문 인쇄 손/얼굴 오탐을 골든 세트에 넣어 회귀 (`printed_hand`)
+- 최종 `fingerseg.onnx` 가중치는 미선정(후보 A 커스텀 MobileNet/U-Net 우선); stub은 벤치 전용
 
 ## 양자화·EP
 
@@ -130,6 +134,7 @@ scanbooks-quantize-candidates --frozen   # writes benches/quantize_candidates.{j
 # scanbooks-quantize-candidates --onnx-dir /tmp/doctr-onnx --out-dir benches/onnx_quant
 # optional regenerate parity (no-op if files already present):
 # python -c "from pathlib import Path; from scanbooks_engine.parity_fixtures import ensure_parity_fixtures; ensure_parity_fixtures(Path('tests/fixtures/parity'))"
+pytest tests/test_finger_pipeline.py -q
 ```
 
-Export: [benches/export_prototype.md](benches/export_prototype.md). 매트릭스: [benches/experiment_matrix.md](benches/experiment_matrix.md). 양자화: [benches/quantize_candidates.md](benches/quantize_candidates.md). 파리티: `tests/fixtures/parity/manifest.json`.
+Export: [benches/export_prototype.md](benches/export_prototype.md). 매트릭스: [benches/experiment_matrix.md](benches/experiment_matrix.md). 양자화: [benches/quantize_candidates.md](benches/quantize_candidates.md). FingerSeg: [benches/fingerseg_candidates.md](benches/fingerseg_candidates.md). 파리티: `tests/fixtures/parity/manifest.json`.
