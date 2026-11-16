@@ -6,7 +6,7 @@ Android 네이티브 앱 내부 설계. 계약·스키마는 [ARCHITECTURE.md](.
 
 - Jetpack Compose UI, CameraX 프리뷰
 - 실시간 문서 테두리(Rough luminance blob + 안정화; ML Kit 후속 가능)
-- 로컬 `ScanSession` / `Page` 저장 (후속)
+- 로컬 `ScanSession` / `Page` 저장 (`storage/SessionStore`)
 - ONNX Runtime Mobile로 네트워크 추론 (후속)
 - OpenCV로 **flow remap**·**Telea/NS inpaint** (후속)
 - `PdfDocument` export (후속; Session에 CTA stub)
@@ -21,8 +21,9 @@ android/
   settings.gradle.kts / gradle wrapper
   app/
     src/main/java/.../scanbooks/
-      camera/          # RoughQuadDetector, EdgeStabilityTracker, YuvToGray
-      model/           # AppRoute, PipelineStage, Quad, PreviewEdgeState
+      camera/          # RoughQuadDetector, EdgeStabilityTracker, YuvToGray, CameraCaptureHolder
+      storage/         # SessionStore — sessions/{id}/pages/{pageId}/
+      model/           # AppRoute, PipelineStage, ScanSession, Page, Quad, …
       process/         # StubProcessRunner
       ui/camera|process|session/
       MainActivity.kt
@@ -37,8 +38,11 @@ android/
 
 ## 저장
 
-- `context.filesDir/sessions/{sessionId}/` (후속)
+- `context.filesDir/sessions/{sessionId}/session.json`
+- `pages/{pageId}/page.json` + `original.jpg` + mid `working.png` (capture-time lossless)
+- 후속 단계: `cropped.png` / `dewarped.png` / `cleaned.png`
 - 스키마 필드명·단계 enum은 iOS·ARCHITECTURE와 동일
+- 셔터 → CameraX `ImageCapture` JPEG → `appendPage` → stub Process 화면
 
 ## 파리티
 

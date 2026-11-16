@@ -1,7 +1,7 @@
 import Foundation
 
 /// Mirrors ARCHITECTURE §4.2 `PipelineStage`. UI labels: docs/UIUX.md §4.2.
-enum PipelineStage: String, CaseIterable, Equatable, Sendable {
+enum PipelineStage: String, CaseIterable, Equatable, Sendable, Codable {
     case crop
     case geo
     case finger

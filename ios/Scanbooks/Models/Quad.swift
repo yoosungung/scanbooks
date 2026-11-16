@@ -1,13 +1,13 @@
 import CoreGraphics
 import Foundation
 
-struct NormPoint: Equatable, Sendable {
+struct NormPoint: Equatable, Sendable, Codable {
     var x: Double
     var y: Double
 }
 
 /// ARCHITECTURE §4.3 — normalized [0,1], top-left origin.
-struct Quad: Equatable, Sendable {
+struct Quad: Equatable, Sendable, Codable {
     var tl: NormPoint
     var tr: NormPoint
     var br: NormPoint

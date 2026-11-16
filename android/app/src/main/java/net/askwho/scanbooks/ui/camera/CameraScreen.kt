@@ -26,6 +26,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,13 +46,16 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import net.askwho.scanbooks.camera.CameraCaptureHolder
 import net.askwho.scanbooks.model.OverlayKind
 import net.askwho.scanbooks.model.PreviewEdgeState
+import net.askwho.scanbooks.model.Quad
+import java.util.concurrent.Executors
 
 @Composable
 fun CameraScreen(
     pageCount: Int,
-    onShutter: () -> Unit,
+    onCaptured: (ByteArray, Quad?) -> Unit,
     onOpenSession: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -62,6 +67,10 @@ fun CameraScreen(
     }
     var permissionDenied by remember { mutableStateOf(false) }
     var edgeState by remember { mutableStateOf<PreviewEdgeState>(PreviewEdgeState.Undetected) }
+    var capturing by remember { mutableStateOf(false) }
+    var captureError by remember { mutableStateOf<String?>(null) }
+    val captureHolder = remember { CameraCaptureHolder() }
+    val captureExecutor = remember { Executors.newSingleThreadExecutor() }
     var showDewarpTip by remember {
         mutableStateOf(
             !context.getSharedPreferences("scanbooks", 0)
@@ -91,13 +100,27 @@ fun CameraScreen(
         }
     }
 
+    if (captureError != null) {
+        AlertDialog(
+            onDismissRequest = { captureError = null },
+            confirmButton = {
+                TextButton(onClick = { captureError = null }) { Text("확인") }
+            },
+            title = { Text("촬영 실패") },
+            text = { Text(captureError ?: "") },
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black),
     ) {
         if (permissionGranted) {
-            CameraPreviewBind(onEdgeState = { edgeState = it })
+            CameraPreviewBind(
+                captureHolder = captureHolder,
+                onEdgeState = { edgeState = it },
+            )
         } else {
             Box(
                 modifier = Modifier
@@ -204,9 +227,27 @@ fun CameraScreen(
                         .size(72.dp)
                         .border(4.dp, Color.White, CircleShape)
                         .padding(7.dp)
-                        .background(Color.White, CircleShape)
+                        .background(
+                            if (capturing) Color.White.copy(alpha = 0.5f) else Color.White,
+                            CircleShape,
+                        )
                         .semantics { contentDescription = "셔터" }
-                        .clickable(onClick = onShutter),
+                        .clickable(enabled = !capturing) {
+                            if (capturing) return@clickable
+                            capturing = true
+                            val quad = edgeState.quad
+                            captureHolder.takeJpeg(captureExecutor) { result ->
+                                // Callback may be off main; hop via PreviewView/main post is handled by Compose state setters on UI if needed.
+                                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                    capturing = false
+                                    result
+                                        .onSuccess { bytes -> onCaptured(bytes, quad) }
+                                        .onFailure {
+                                            captureError = "사진을 저장하지 못했습니다. 카메라 상태를 확인해 주세요."
+                                        }
+                                }
+                            }
+                        },
                 )
 
                 Spacer(modifier = Modifier.weight(1f))

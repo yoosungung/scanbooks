@@ -3,12 +3,13 @@ import SwiftUI
 /// M2 Camera — full-bleed preview + rough/Vision realtime quad (UIUX §4.1).
 struct CameraView: View {
     let pageCount: Int
-    let onShutter: () -> Void
+    let onCaptured: (Data, Quad?) -> Void
     let onOpenSession: () -> Void
 
     @StateObject private var camera = CameraSessionController()
     @AppStorage("scanbooks.didShowDewarpTip") private var didShowDewarpTip = false
     @State private var showDewarpTip = false
+    @State private var captureError: String?
 
     var body: some View {
         ZStack {
@@ -54,7 +55,28 @@ struct CameraView: View {
         .alert("촬영 후 곡면을 펴고 손가락을 지웁니다", isPresented: $showDewarpTip) {
             Button("확인", role: .cancel) {}
         }
+        .alert("촬영 실패", isPresented: Binding(
+            get: { captureError != nil },
+            set: { if !$0 { captureError = nil } }
+        )) {
+            Button("확인", role: .cancel) { captureError = nil }
+        } message: {
+            Text(captureError ?? "")
+        }
         .accessibilityElement(children: .contain)
+    }
+
+    private func shutterTapped() {
+        guard !camera.isCapturing else { return }
+        let quad = camera.edgeState.quad
+        camera.captureJPEG { result in
+            switch result {
+            case .success(let data):
+                onCaptured(data, quad)
+            case .failure:
+                captureError = "사진을 저장하지 못했습니다. 카메라 상태를 확인해 주세요."
+            }
+        }
     }
 
     private var placeholderPreview: some View {
@@ -111,16 +133,17 @@ struct CameraView: View {
 
             Spacer()
 
-            Button(action: onShutter) {
+            Button(action: shutterTapped) {
                 Circle()
                     .strokeBorder(.white, lineWidth: 4)
                     .frame(width: 72, height: 72)
                     .overlay(
                         Circle()
-                            .fill(.white)
+                            .fill(camera.isCapturing ? .white.opacity(0.5) : .white)
                             .frame(width: 58, height: 58)
                     )
             }
+            .disabled(camera.isCapturing)
             .accessibilityLabel("셔터")
 
             Spacer()
@@ -178,5 +201,5 @@ private struct QuadOverlayLayer: View {
 }
 
 #Preview {
-    CameraView(pageCount: 1, onShutter: {}, onOpenSession: {})
+    CameraView(pageCount: 1, onCaptured: { _, _ in }, onOpenSession: {})
 }
