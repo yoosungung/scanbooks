@@ -1,0 +1,25 @@
+{
+  "description": "M1 parity: preprocess tensor + raw_flow\u2192warped + raw_mask\u2192inpainted",
+  "case": "synth_page",
+  "geo_net_size": 288,
+  "image_hw": [
+    96,
+    128
+  ],
+  "inpaint_radius": 3,
+  "flow_layout": "raw_flow.npy is 2\u00d7288\u00d7288 (x,y), already grid_sample-scaled",
+  "tolerances": {
+    "grid_sample_atol": 1e-05,
+    "remap_max_abs": 0.011764705882352941,
+    "inpaint_atol": 0.00392156862745098
+  },
+  "files": {
+    "image": "synth_page_image.png",
+    "preprocess": "synth_page_preprocess.npy",
+    "raw_flow": "synth_page_raw_flow.npy",
+    "flow_hw2": "synth_page_flow_hw2.npy",
+    "warped": "synth_page_warped.png",
+    "raw_mask": "synth_page_raw_mask.png",
+    "inpainted": "synth_page_inpainted.png"
+  }
+}
