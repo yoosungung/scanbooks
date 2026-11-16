@@ -16,7 +16,7 @@
 
 ## 현황
 
-기획 문서(M0) 확정. M1 export 프로토타입 측정 완료 — [engine/benches/export_prototype.md](engine/benches/export_prototype.md). 앱 코드는 아직 없습니다.
+기획 문서(M0) 확정. M1 export·실험 매트릭스·파리티 픽스처 완료 — [engine/benches/export_prototype.md](engine/benches/export_prototype.md), [engine/tests/fixtures/parity/](engine/tests/fixtures/parity/). 앱 코드는 아직 없습니다.
 
 ## 로컬 quickstart
 

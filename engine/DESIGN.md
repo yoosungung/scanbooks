@@ -19,26 +19,43 @@ engine/
   pyproject.toml
   src/scanbooks_engine/
     export_doctr.py
-    quantize.py
-    infer_cli.py
-    geo_warp.py           # upsample flow + grid_sample 레퍼런스
-    ill_patches.py        # 128 패치·overlap·batch ORT·stitch
-    finger_pipeline.py
-    preprocess.py
+    preprocess.py         # RGB→NCHW /255 @ 288
+    geo_warp.py           # upsample flow + grid_sample / remap
+    finger_inpaint.py     # Telea 레퍼런스 (raw_mask→inpainted)
+    parity_fixtures.py    # fixtures/parity 발행·로드
+    crop.py / golden.py / stage_order.py / experiment_matrix.py
+    quantize.py           # (예정)
+    ill_patches.py        # (예정) 128 패치·overlap·batch ORT·stitch
+    finger_pipeline.py    # (예정) 외곽 CC 필터 + dilation
   tests/
     test_preprocess.py
     test_geo_warp_parity.py
-    test_ill_stitch.py
-    test_finger_filter.py
-    test_golden_geo.py
-    test_golden_ill.py
-    fixtures/             # 전처리 텐서 + flow/mask 후처리 기준 PNG/bin
+    test_finger_inpaint_parity.py
+    test_parity_fixtures.py
+    test_crop_c1.py / test_stage_order_s1.py / test_export_contracts.py
+    fixtures/
+      golden/             # 실험 매트릭스 골든
+      parity/             # 전처리 텐서 + raw_flow/warped + raw_mask/inpainted
   benches/
-    latency.md
-    experiment_matrix.md  # crop·단계 순서 비교
+    latency.md            # (예정)
+    experiment_matrix.md
+    export_prototype.md
 ```
 
 TDD: 전처리 shape → warp/inpaint 파리티 → 골든 품질 → export 붙이기.
+
+## 파리티 픽스처 (M1)
+
+경로: `tests/fixtures/parity/` (`manifest.json`).
+
+| 산출물 | 파일 | 용도 |
+|---|---|---|
+| 전처리 텐서 | `synth_page_preprocess.npy` | `1×3×288×288` float32 |
+| raw_flow | `synth_page_raw_flow.npy` | `2×288×288`, 이미 `(2*(bm/286.8)-1)*0.99` 스케일 |
+| warped | `synth_page_warped.png` | `grid_sample(align_corners=True)` 기준 |
+| raw_mask / inpainted | `*_raw_mask.png` / `*_inpainted.png` | Telea 기준 |
+
+허용오차: remap vs grid_sample `max abs ≤ 3/255`; PNG 라운드트립·inpaint `≤ 1/255`. 해시 비교 금지. ios/android는 동일 픽스처로 CvBridge 단위 테스트.
 
 ## 해상도 (혼용 금지)
 
@@ -107,6 +124,8 @@ pytest
 scanbooks-experiment-matrix
 # optional re-measure (needs DocTr checkout + weights + CPU device patches):
 # DOCTR_ROOT=/path/to/DocTr scanbooks-export-doctr
+# optional regenerate parity (no-op if files already present):
+# python -c "from pathlib import Path; from scanbooks_engine.parity_fixtures import ensure_parity_fixtures; ensure_parity_fixtures(Path('tests/fixtures/parity'))"
 ```
 
-Export: [benches/export_prototype.md](benches/export_prototype.md). 매트릭스: [benches/experiment_matrix.md](benches/experiment_matrix.md).
+Export: [benches/export_prototype.md](benches/export_prototype.md). 매트릭스: [benches/experiment_matrix.md](benches/experiment_matrix.md). 파리티: `tests/fixtures/parity/manifest.json`.

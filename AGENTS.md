@@ -38,5 +38,5 @@ This file provides guidance to AI coding assistants (Claude Code, Codex, Gemini,
  
 ## 3. Status
 
-M0 문서 확정. M1 export 프로토타입 + 실험 매트릭스 완료(`engine/benches/export_prototype.md`, `experiment_matrix.md`; BBox·`geo→finger→ill` 재확인). 다음: 파리티 픽스처.
+M0 문서 확정. M1 export·실험 매트릭스·파리티 픽스처 완료(`engine/tests/fixtures/parity/`). 다음: ONNX 양자화 후보.
 
