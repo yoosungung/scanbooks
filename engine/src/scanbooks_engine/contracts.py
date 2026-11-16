@@ -10,6 +10,12 @@ WORK_LONG_EDGE = 1024
 FLOW_SCALE_DIV = 286.8
 FLOW_SCALE_MUL = 0.99
 
+# §5.2 FingerSeg post-process (engine reference; ios/android mirror).
+FINGER_MASK_THRESHOLD = 0.5
+# Shadow/halo dilate radius = round(ratio * workLongEdge); ≥1 when mask non-empty.
+FINGER_DILATION_RATIO = 0.004  # → ~4 px @ workLongEdge=1024
+FINGER_INPAINT_DEFAULT = "telea"  # parity lock; "ns" alternate
+
 # §3.1 — margin as fraction of the longer image side (engine-confirmed).
 CROP_MARGIN_RATIO = 0.05
 

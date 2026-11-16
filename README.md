@@ -16,7 +16,7 @@
 
 ## 현황
 
-기획 문서(M0) 확정. M1 export·실험 매트릭스·파리티·양자화 후보 완료 — [engine/benches/quantize_candidates.md](engine/benches/quantize_candidates.md). 앱 코드는 아직 없습니다.
+기획 문서(M0) 확정. M1 export·실험 매트릭스·파리티·양자화·FingerSeg 후처리 완료 — [engine/benches/fingerseg_candidates.md](engine/benches/fingerseg_candidates.md). 앱 코드는 아직 없습니다.
 
 ## 로컬 quickstart
 
