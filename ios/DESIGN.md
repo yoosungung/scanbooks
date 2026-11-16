@@ -8,7 +8,7 @@ iOS 네이티브 앱 내부 설계. 계약·스키마는 [ARCHITECTURE.md](../AR
 - 실시간 문서 테두리(Vision 우선, 부족 시 Rough luminance blob)
 - 로컬 `ScanSession` / `Page` 저장 (`Storage/SessionStore`)
 - ONNX Runtime Mobile로 네트워크 추론 (후속)
-- OpenCV(또는 동등)로 **flow remap**·**Telea/NS inpaint** (후속)
+- **flow remap** (`CvBridge.remap`, align_corners) · Telea/NS inpaint는 OpenCV 연동 시 동일 훅으로 잠금 (M3)
 - PDFKit export (후속; Session에 CTA stub)
 
 모델 학습·ONNX 변환은 `engine/` 몫이다.
@@ -25,8 +25,9 @@ ios/
     Storage/               # SessionStore — sessions/{id}/pages/{pageId}/
     Process/               # PipelineStub + StubProcessRunner + stage list UI
     Session/               # grid + PDF CTA stub
+    CvBridge/              # remap (pure Swift) + inpaintTelea 훅(OpenCV pending)
     Models/                # AppRoute, PipelineStage, ScanSession, Page, Quad, …
-  ScanbooksTests/
+  ScanbooksTests/          # + engine parity fixtures 리소스
 ```
 
 ## 파이프라인 러너
@@ -46,7 +47,10 @@ ios/
 
 ## 파리티
 
-- `engine/tests/fixtures/` → `CvBridge` 단위 테스트 (후속)
+- `CvBridge.remap` vs warped fixture (`remap_max_abs ≤ 3/255`, align_corners, INTER_LINEAR + BORDER_CONSTANT(0))
+- `CvBridge.inpaintTelea` 시그니처·픽스처 훅; Telea 본체는 OpenCV(M3), 동일 테스트가 `inpaint_atol ≤ 1/255`로 잠금
+- 픽스처: `ScanbooksTests/Fixtures/parity/` (`.rgb`/`.gray`/`.f32` + manifest; engine parity에서 발행)
+- 단위 테스트: `ParityRemapInpaintHookTests`
 
 ## UX
 

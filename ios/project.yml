@@ -29,6 +29,11 @@ targets:
     platform: iOS
     sources:
       - path: ScanbooksTests
+        excludes:
+          - Fixtures/**
+      - path: ScanbooksTests/Fixtures/parity
+        buildPhase: resources
+        type: folder
     dependencies:
       - target: Scanbooks
     settings:

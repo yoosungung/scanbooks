@@ -58,7 +58,7 @@ TDD: 전처리 shape → warp/inpaint 파리티 → 골든 품질 → export 붙
 | warped | `synth_page_warped.png` | `grid_sample(align_corners=True)` 기준 |
 | raw_mask / inpainted | `*_raw_mask.png` / `*_inpainted.png` | Telea 기준 |
 
-허용오차: remap vs grid_sample `max abs ≤ 3/255`; PNG 라운드트립·inpaint `≤ 1/255`. 해시 비교 금지. ios/android는 동일 픽스처로 CvBridge 단위 테스트.
+허용오차: remap vs grid_sample `max abs ≤ 3/255`; PNG 라운드트립·inpaint `≤ 1/255`. 해시 비교 금지. ios/android는 동일 픽스처로 CvBridge 단위 테스트(M2 훅: `ios/ScanbooksTests/Fixtures/parity/` · `android/app/src/test/resources/parity/`에 `.rgb`/`.gray`/`.f32` 서브셋).
 
 ## 해상도 (혼용 금지)
 
