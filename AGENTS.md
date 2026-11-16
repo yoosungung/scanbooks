@@ -38,5 +38,5 @@ This file provides guidance to AI coding assistants (Claude Code, Codex, Gemini,
  
 ## 3. Status
 
-M0 문서 확정. M1 export·실험 매트릭스·파리티·양자화·FingerSeg·EP latency 완료(`engine/benches/latency.md`). M2 UI shell(Camera·stub Process·Session·PDF CTA) 착수. 병행: FingerSeg 가중치 export · IllTr export 단순화.
+M0 문서 확정. M1 export·실험 매트릭스·파리티·양자화·FingerSeg·EP latency 완료(`engine/benches/latency.md`). M2 UI shell 머지 후 카메라 프리뷰+실시간 Quad 슬라이스 진행. 병행: FingerSeg 가중치 export · IllTr export 단순화.
 

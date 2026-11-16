@@ -1,42 +1,88 @@
 import SwiftUI
 
-/// M2 Camera shell — 1페이지 mode. Live quad / AVFoundation = later slice.
+/// M2 Camera — full-bleed preview + rough/Vision realtime quad (UIUX §4.1).
 struct CameraView: View {
     let pageCount: Int
     let onShutter: () -> Void
     let onOpenSession: () -> Void
 
+    @StateObject private var camera = CameraSessionController()
+    @AppStorage("scanbooks.didShowDewarpTip") private var didShowDewarpTip = false
+    @State private var showDewarpTip = false
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
 
-            // Preview placeholder (no camera permission loop in shell)
-            Rectangle()
-                .fill(
-                    LinearGradient(
-                        colors: [Color(white: 0.12), Color(white: 0.22)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .overlay {
-                    QuadOverlay()
-                }
+            if camera.permission == .authorized {
+                CameraPreviewView(session: camera.session)
+                    .ignoresSafeArea()
+            } else {
+                placeholderPreview
+            }
+
+            QuadOverlayLayer(state: camera.edgeState)
                 .ignoresSafeArea()
+                .allowsHitTesting(false)
 
             VStack {
                 topBar
                 Spacer()
-                Text("문서를 화면에 맞춰 주세요")
-                    .font(.footnote)
-                    .foregroundStyle(.white.opacity(0.85))
-                    .padding(.bottom, 8)
+                if !camera.edgeState.hintCopy.isEmpty {
+                    Text(camera.edgeState.hintCopy)
+                        .font(.footnote)
+                        .foregroundStyle(.white.opacity(0.85))
+                        .padding(.bottom, 8)
+                }
+                if camera.permission == .denied {
+                    permissionDeniedBanner
+                        .padding(.bottom, 12)
+                }
                 bottomBar
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
+        .onAppear {
+            camera.start()
+            if !didShowDewarpTip {
+                showDewarpTip = true
+                didShowDewarpTip = true
+            }
+        }
+        .onDisappear { camera.stop() }
+        .alert("촬영 후 곡면을 펴고 손가락을 지웁니다", isPresented: $showDewarpTip) {
+            Button("확인", role: .cancel) {}
+        }
         .accessibilityElement(children: .contain)
+    }
+
+    private var placeholderPreview: some View {
+        Rectangle()
+            .fill(
+                LinearGradient(
+                    colors: [Color(white: 0.12), Color(white: 0.22)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            .ignoresSafeArea()
+    }
+
+    private var permissionDeniedBanner: some View {
+        VStack(spacing: 8) {
+            Text("카메라 권한이 필요합니다")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.white)
+            Button("설정 열기") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding(12)
+        .background(Color.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 12))
     }
 
     private var topBar: some View {
@@ -100,20 +146,33 @@ struct CameraView: View {
     }
 }
 
-private struct QuadOverlay: View {
+private struct QuadOverlayLayer: View {
+    let state: PreviewEdgeState
+
     var body: some View {
         GeometryReader { geo in
-            let inset = min(geo.size.width, geo.size.height) * 0.12
-            Path { path in
-                path.move(to: CGPoint(x: inset, y: inset * 1.2))
-                path.addLine(to: CGPoint(x: geo.size.width - inset, y: inset))
-                path.addLine(to: CGPoint(x: geo.size.width - inset * 0.9, y: geo.size.height - inset))
-                path.addLine(to: CGPoint(x: inset * 1.1, y: geo.size.height - inset * 0.85))
-                path.closeSubpath()
+            let size = geo.size
+            switch state.overlayKind {
+            case .grayGuide:
+                Path { path in
+                    let inset = min(size.width, size.height) * 0.12
+                    path.addRect(
+                        CGRect(
+                            x: inset,
+                            y: inset,
+                            width: size.width - inset * 2,
+                            height: size.height - inset * 2
+                        )
+                    )
+                }
+                .stroke(Color.gray.opacity(0.7), lineWidth: 1.5)
+            case .greenQuad:
+                if let quad = state.quad {
+                    Path(quad.path(in: size))
+                        .stroke(Color.green.opacity(0.9), lineWidth: 2.5)
+                }
             }
-            .stroke(Color.green.opacity(0.85), lineWidth: 2.5)
         }
-        .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
 }

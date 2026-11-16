@@ -7,13 +7,14 @@ plugins {
 android {
     namespace = "net.askwho.scanbooks"
     compileSdk = 35
+    buildToolsVersion = "35.0.0"
 
     defaultConfig {
         applicationId = "net.askwho.scanbooks"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
-        versionName = "0.1.0-m2-shell"
+        versionName = "0.1.0-m2-camera"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -54,7 +55,14 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+
+    val cameraX = "1.4.0"
+    implementation("androidx.camera:camera-core:$cameraX")
+    implementation("androidx.camera:camera-camera2:$cameraX")
+    implementation("androidx.camera:camera-lifecycle:$cameraX")
+    implementation("androidx.camera:camera-view:$cameraX")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 
