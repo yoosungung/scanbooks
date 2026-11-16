@@ -10,6 +10,12 @@ WORK_LONG_EDGE = 1024
 FLOW_SCALE_DIV = 286.8
 FLOW_SCALE_MUL = 0.99
 
+# §3.1 — margin as fraction of the longer image side (engine-confirmed).
+CROP_MARGIN_RATIO = 0.05
+
+# §1.3 / §3 — app default page pipeline (crop is ROI; geo→finger→ill after).
+PIPELINE_DEFAULT_ORDER = ("crop", "geo", "finger", "ill", "done")
+
 # Measured from official DocTr checkpoints (HF Space mirror of Google Drive weights).
 # Source: engine/benches/export_prototype.json
 MEASURED = {

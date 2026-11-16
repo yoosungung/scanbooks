@@ -12,15 +12,17 @@ dependencies = [
   "numpy",
   "onnx",
   "onnxruntime",
+  "opencv-python-headless",
   "torch",
 ]
 
 [project.optional-dependencies]
-doctr = ["timm", "opencv-python-headless"]
+doctr = ["timm"]
 dev = ["pytest"]
 
 [project.scripts]
 scanbooks-export-doctr = "scanbooks_engine.export_doctr:main"
+scanbooks-experiment-matrix = "scanbooks_engine.experiment_matrix:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
