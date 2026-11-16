@@ -6,7 +6,7 @@ iOS 네이티브 앱 내부 설계. 계약·스키마는 [ARCHITECTURE.md](../AR
 
 - SwiftUI 셸, AVFoundation 카메라 프리뷰
 - 실시간 문서 테두리(Vision 우선, 부족 시 Rough luminance blob)
-- 로컬 `ScanSession` / `Page` 저장 (후속)
+- 로컬 `ScanSession` / `Page` 저장 (`Storage/SessionStore`)
 - ONNX Runtime Mobile로 네트워크 추론 (후속)
 - OpenCV(또는 동등)로 **flow remap**·**Telea/NS inpaint** (후속)
 - PDFKit export (후속; Session에 CTA stub)
@@ -21,10 +21,11 @@ ios/
   project.yml              # XcodeGen
   Scanbooks/
     App/                   # ScanbooksApp, RootView
-    Camera/                # preview, Vision+rough quad, shutter chrome
+    Camera/                # preview, Vision+rough quad, photo shutter
+    Storage/               # SessionStore — sessions/{id}/pages/{pageId}/
     Process/               # StubProcessRunner + stage list UI
     Session/               # grid + PDF CTA stub
-    Models/                # AppRoute, PipelineStage, Quad, PreviewEdgeState
+    Models/                # AppRoute, PipelineStage, ScanSession, Page, Quad, …
   ScanbooksTests/
 ```
 
@@ -36,8 +37,11 @@ ios/
 
 ## 저장
 
-- `sessions/{sessionId}/` (후속)
-- `original.jpg`; 중간·최종 PNG; 단계 간 JPEG 재인코딩 금지
+- Application Support `scanbooks/sessions/{sessionId}/session.json`
+- `pages/{pageId}/page.json` + `original.jpg` + mid `working.png` (capture-time lossless)
+- 후속 단계: `cropped.png` / `dewarped.png` / `cleaned.png`
+- 단계 간 JPEG 재인코딩 금지 ([ARCHITECTURE §1.11](../ARCHITECTURE.md))
+- 셔터 → `AVCapturePhotoOutput` JPEG → `appendPage` → stub Process 화면
 
 ## 파리티
 

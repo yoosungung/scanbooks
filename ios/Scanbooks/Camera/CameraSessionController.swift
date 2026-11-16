@@ -7,6 +7,7 @@ final class CameraSessionController: NSObject, ObservableObject {
     @Published private(set) var edgeState: PreviewEdgeState = .undetected
     @Published private(set) var permission: CameraPermission = .unknown
     @Published private(set) var isRunning = false
+    @Published private(set) var isCapturing = false
 
     let session = AVCaptureSession()
 
@@ -15,6 +16,8 @@ final class CameraSessionController: NSObject, ObservableObject {
     private let stateLock = NSLock()
     private var tracker = EdgeStabilityTracker(requiredHits: 3)
     private var didConfigure = false
+    private let photoOutput = AVCapturePhotoOutput()
+    private var photoDelegate: PhotoCaptureDelegate?
 
     enum CameraPermission: Equatable {
         case unknown
@@ -89,6 +92,9 @@ final class CameraSessionController: NSObject, ObservableObject {
                         connection.videoOrientation = .portrait
                     }
                 }
+                if self.session.canAddOutput(self.photoOutput) {
+                    self.session.addOutput(self.photoOutput)
+                }
                 self.session.commitConfiguration()
                 self.didConfigure = true
             }
@@ -98,6 +104,36 @@ final class CameraSessionController: NSObject, ObservableObject {
             }
             DispatchQueue.main.async { self.isRunning = true }
         }
+    }
+
+    /// Captures a still JPEG for local `Page.originalUri` (ARCHITECTURE §4.2).
+    func captureJPEG(completion: @escaping (Result<Data, Error>) -> Void) {
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+            guard self.session.isRunning, self.session.outputs.contains(self.photoOutput) else {
+                DispatchQueue.main.async {
+                    completion(.failure(CaptureError.unavailable))
+                }
+                return
+            }
+            DispatchQueue.main.async { self.isCapturing = true }
+            let settings = AVCapturePhotoSettings()
+            settings.photoQualityPrioritization = .balanced
+            let delegate = PhotoCaptureDelegate { [weak self] result in
+                DispatchQueue.main.async {
+                    self?.isCapturing = false
+                    self?.photoDelegate = nil
+                    completion(result)
+                }
+            }
+            self.photoDelegate = delegate
+            self.photoOutput.capturePhoto(with: settings, delegate: delegate)
+        }
+    }
+
+    enum CaptureError: Error {
+        case unavailable
+        case noPhotoData
     }
 
     static func detectQuad(pixelBuffer: CVPixelBuffer, rough: RoughQuadDetector) -> Quad? {
@@ -162,5 +198,29 @@ extension CameraSessionController: AVCaptureVideoDataOutputSampleBufferDelegate 
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
         let candidate = CameraSessionController.detectQuad(pixelBuffer: pixelBuffer, rough: RoughQuadDetector())
         applyDetection(candidate)
+    }
+}
+
+private final class PhotoCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
+    private let completion: (Result<Data, Error>) -> Void
+
+    init(completion: @escaping (Result<Data, Error>) -> Void) {
+        self.completion = completion
+    }
+
+    func photoOutput(
+        _ output: AVCapturePhotoOutput,
+        didFinishProcessingPhoto photo: AVCapturePhoto,
+        error: Error?
+    ) {
+        if let error {
+            completion(.failure(error))
+            return
+        }
+        guard let data = photo.fileDataRepresentation() else {
+            completion(.failure(CameraSessionController.CaptureError.noPhotoData))
+            return
+        }
+        completion(.success(data))
     }
 }
