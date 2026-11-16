@@ -5,3 +5,11 @@
 engine/benches/onnx/
 *.onnx
 .pytest_cache/
+ios/Scanbooks.xcodeproj/
+ios/*.xcworkspace/
+ios/DerivedData/
+android/.gradle/
+android/**/build/
+android/local.properties
+*.iml
+.idea/
