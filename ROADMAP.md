@@ -26,7 +26,7 @@ factory `pm-roadmap-sync`는 `##` 아래 **`- [ ]` / `- [x]`** 만 enqueue한다
 - [x] **파리티 픽스처:** `engine/tests/fixtures/`에 전처리 텐서 + `raw_flow→warped` + `raw_mask→inpainted` 기준 출력 포함. — 증거: `engine/tests/fixtures/parity/` + `test_geo_warp_parity` / `test_finger_inpaint_parity`
 - [x] ONNX 최적화·양자화 후보(weight-only INT8 / dynamic; **static INT8 기본 금지**). — 증거: `engine/benches/quantize_candidates.md`
 - [x] FingerSeg 후보 + 외곽 CC 필터 + Telea/NS. — 증거: `engine/benches/fingerseg_candidates.md` + `finger_pipeline` / `test_finger_pipeline`
-- [ ] EP별 latency 벤치 → `benches/latency.md`.
+- [x] EP별 latency 벤치 → `benches/latency.md`. — 증거: `engine/benches/latency.md` (GeoTr e2e pass; IllTr seq fail→export 단순화; GeoTr quant=`dynamic_int8`; default EP=CoreML MLProgram NE)
 
 **완료 기준(성공 게이트):**
 
@@ -97,5 +97,5 @@ factory `pm-roadmap-sync`는 `##` 아래 **`- [ ]` / `- [x]`** 만 enqueue한다
 
 1. IllTr export forward 단순화(노드 폭발 완화) — 양자화 후보(WO)는 문서화됨
 2. FingerSeg 가중치 학습/export(후보 A) — 후처리·후보 표는 `fingerseg_candidates.md` 완료; 라이선스 행은 가중치 확정 시 갱신
-3. EP·latency 벤치(`benches/latency.md`) 후 게이트 판정 — GeoTr dyn vs WO 최종 선택
+3. ~~EP·latency 벤치(`benches/latency.md`) 후 게이트 판정 — GeoTr dyn vs WO 최종 선택~~ → **완료:** GeoTr=`dynamic_int8`; IllTr 게이트는 export 단순화·배치 선행(완화 경로 유지)
 4. 상업화 시 라이선스 문의 병행
