@@ -18,7 +18,11 @@ final class PipelineStub: @unchecked Sendable {
         Task { @MainActor in
             let stages = PipelineStage.processingOrder + [.done]
             for stage in stages {
-                try? store.updatePageStatus(sessionId: sessionId, pageId: pageId, status: stage)
+                if stage == .done {
+                    try? store.finalizeStubCleaned(sessionId: sessionId, pageId: pageId)
+                } else {
+                    try? store.updatePageStatus(sessionId: sessionId, pageId: pageId, status: stage)
+                }
                 onUpdate(stage)
                 if stage != .done, stepDurationNanoseconds > 0 {
                     try? await Task.sleep(nanoseconds: stepDurationNanoseconds)

@@ -74,6 +74,25 @@ class SessionStore(filesDir: File) {
         persist(loadPage(sessionId, pageId).copy(status = status))
     }
 
+    /** M2 stub: copy `working.png` → `cleaned.png` and set `cleanedUri` (ARCHITECTURE §6 PDF source). */
+    fun finalizeStubCleaned(sessionId: String, pageId: String) {
+        val dir = pageDirectory(sessionId, pageId)
+        val working = File(dir, "working.png")
+        require(working.exists()) { "working.png missing for $pageId" }
+        val cleaned = File(dir, "cleaned.png")
+        working.copyTo(cleaned, overwrite = true)
+        persist(
+            loadPage(sessionId, pageId).copy(
+                cleanedUri = "pages/$pageId/cleaned.png",
+                status = PipelineStage.DONE,
+            ),
+        )
+    }
+
+    fun updateExportPdfUri(sessionId: String, relativeUri: String?) {
+        persist(loadSession(sessionId).copy(exportPdfUri = relativeUri))
+    }
+
     fun updateSessionTitle(id: String, title: String) {
         persist(loadSession(id).copy(title = title))
     }

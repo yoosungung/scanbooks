@@ -40,9 +40,12 @@ fun SessionScreen(
     title: String,
     onTitleChange: (String) -> Unit,
     pageCount: Int,
+    cleanedPageCount: Int,
     onBack: () -> Unit,
+    onExportPdf: () -> String,
 ) {
-    var showPdfStub by remember { mutableStateOf(false) }
+    var exportMessage by remember { mutableStateOf<String?>(null) }
+    var exportFailed by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -68,7 +71,7 @@ fun SessionScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
             Text(
-                text = "${pageCount}장",
+                text = "${pageCount}장 · 완료 ${cleanedPageCount}장",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -87,6 +90,7 @@ fun SessionScreen(
                     modifier = Modifier.weight(1f),
                 ) {
                     items(pageCount) { index ->
+                        val done = index < cleanedPageCount
                         Box(
                             modifier = Modifier
                                 .aspectRatio(3f / 4f)
@@ -101,13 +105,17 @@ fun SessionScreen(
                                 style = MaterialTheme.typography.titleMedium,
                             )
                             Text(
-                                text = "완료",
+                                text = if (done) "완료" else "대기",
                                 color = Color.White,
                                 style = MaterialTheme.typography.labelSmall,
                                 modifier = Modifier
                                     .align(Alignment.TopEnd)
                                     .padding(6.dp)
-                                    .background(Color(0xFF4CAF50).copy(alpha = 0.85f), RoundedCornerShape(50))
+                                    .background(
+                                        (if (done) Color(0xFF4CAF50) else Color(0xFFFF9800))
+                                            .copy(alpha = 0.85f),
+                                        RoundedCornerShape(50),
+                                    )
                                     .padding(horizontal = 6.dp, vertical = 2.dp),
                             )
                         }
@@ -118,8 +126,17 @@ fun SessionScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
-                onClick = { showPdfStub = true },
-                enabled = pageCount > 0,
+                onClick = {
+                    try {
+                        val uri = onExportPdf()
+                        exportFailed = false
+                        exportMessage = "저장됨: $uri"
+                    } catch (_: Exception) {
+                        exportFailed = true
+                        exportMessage = "완료된(cleanedUri) 페이지가 없어 PDF를 만들지 못했습니다."
+                    }
+                },
+                enabled = cleanedPageCount > 0,
                 modifier = Modifier
                     .fillMaxWidth()
                     .semantics { contentDescription = "PDF로 내보내기" },
@@ -129,16 +146,14 @@ fun SessionScreen(
         }
     }
 
-    if (showPdfStub) {
+    if (exportMessage != null) {
         AlertDialog(
-            onDismissRequest = { showPdfStub = false },
+            onDismissRequest = { exportMessage = null },
             confirmButton = {
-                TextButton(onClick = { showPdfStub = false }) { Text("확인") }
+                TextButton(onClick = { exportMessage = null }) { Text("확인") }
             },
-            title = { Text("PDF 경로 (stub)") },
-            text = {
-                Text("완료된 ${pageCount}장을 PDF로 내보내는 경로는 연결됐습니다. 실제 PdfDocument 쓰기는 후속 M2 슬라이스에서 구현합니다.")
-            },
+            title = { Text(if (exportFailed) "PDF 내보내기 실패" else "PDF 내보내기") },
+            text = { Text(exportMessage ?: "") },
         )
     }
 }

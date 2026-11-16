@@ -122,6 +122,32 @@ final class SessionStore: @unchecked Sendable {
         try writePage(page)
     }
 
+    /// M2 stub: copy `working.png` → `cleaned.png` and set `cleanedUri` (ARCHITECTURE §6 PDF source).
+    func finalizeStubCleaned(sessionId: String, pageId: String) throws {
+        lock.lock()
+        defer { lock.unlock() }
+        var page = try loadPage(sessionId: sessionId, pageId: pageId)
+        let dir = pageDir(sessionId: sessionId, pageId: pageId)
+        let working = dir.appendingPathComponent("working.png")
+        let cleaned = dir.appendingPathComponent("cleaned.png")
+        guard fm.fileExists(atPath: working.path) else { throw SessionStoreError.pageNotFound(pageId) }
+        if fm.fileExists(atPath: cleaned.path) {
+            try fm.removeItem(at: cleaned)
+        }
+        try fm.copyItem(at: working, to: cleaned)
+        page.cleanedUri = "pages/\(pageId)/cleaned.png"
+        page.status = .done
+        try writePage(page)
+    }
+
+    func updateExportPdfUri(sessionId: String, relativeUri: String?) throws {
+        lock.lock()
+        defer { lock.unlock() }
+        var session = try loadSession(id: sessionId)
+        session.exportPdfUri = relativeUri
+        try writeSession(session)
+    }
+
     func absoluteFile(sessionId: String, relativeUri: String) -> URL {
         sessionDirectory(id: sessionId).appendingPathComponent(relativeUri)
     }

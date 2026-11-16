@@ -5,6 +5,7 @@ import net.askwho.scanbooks.model.PipelineStage
 import net.askwho.scanbooks.process.PipelineStub
 import net.askwho.scanbooks.storage.SessionStore
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -37,7 +38,12 @@ class PipelineStubTest {
 
         assertEquals(PipelineStage.processingOrder + PipelineStage.DONE, result)
         assertEquals(result, visited)
-        assertEquals(PipelineStage.DONE, store.loadPage(session.id, page.id).status)
+        val done = store.loadPage(session.id, page.id)
+        assertEquals(PipelineStage.DONE, done.status)
+        assertEquals("pages/${page.id}/cleaned.png", done.cleanedUri)
+        val cleaned = store.absoluteFile(session.id, done.cleanedUri!!)
+        assertTrue(cleaned.exists())
+        assertTrue(SessionStore.isPng(cleaned.readBytes()))
     }
 
     private fun tinyJpeg(): ByteArray =

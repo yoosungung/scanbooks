@@ -37,7 +37,12 @@ final class PipelineStubTests: XCTestCase {
         wait(for: [expectation], timeout: 1.0)
 
         XCTAssertEqual(visited, PipelineStage.processingOrder + [.done])
-        XCTAssertEqual(try store.loadPage(sessionId: session.id, pageId: page.id).status, .done)
+        let done = try store.loadPage(sessionId: session.id, pageId: page.id)
+        XCTAssertEqual(done.status, .done)
+        XCTAssertEqual(done.cleanedUri, "pages/\(page.id)/cleaned.png")
+        let cleanedURL = store.absoluteFile(sessionId: session.id, relativeUri: done.cleanedUri!)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: cleanedURL.path))
+        XCTAssertTrue(SessionStore.isPNG(try Data(contentsOf: cleanedURL)))
     }
 
     private static func tinyJPEG() -> Data {

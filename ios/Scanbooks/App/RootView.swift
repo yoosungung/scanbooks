@@ -6,6 +6,7 @@ struct RootView: View {
     @State private var activeSessionId: String?
     @State private var activePageId: String?
     @State private var pageCount: Int = 0
+    @State private var cleanedPageCount: Int = 0
     @State private var storeError: String?
 
     private let store: SessionStore = {
@@ -24,7 +25,10 @@ struct RootView: View {
                     onCaptured: { jpeg, quad in
                         persistCapture(jpeg: jpeg, quad: quad)
                     },
-                    onOpenSession: { route = .session }
+                    onOpenSession: {
+                        refreshCounts()
+                        route = .session
+                    }
                 )
             case .process:
                 if let sessionId = activeSessionId, let pageId = activePageId {
@@ -32,7 +36,10 @@ struct RootView: View {
                         store: store,
                         sessionId: sessionId,
                         pageId: pageId,
-                        onFinished: { route = .camera },
+                        onFinished: {
+                            refreshCounts()
+                            route = .camera
+                        },
                         onCancel: { route = .camera }
                     )
                 } else {
@@ -43,7 +50,14 @@ struct RootView: View {
                 SessionView(
                     title: $sessionTitle,
                     pageCount: pageCount,
-                    onBack: { route = .camera }
+                    cleanedPageCount: cleanedPageCount,
+                    onBack: { route = .camera },
+                    onExportPdf: {
+                        guard let sessionId = activeSessionId else {
+                            throw PdfExporterError.noCleanedPages
+                        }
+                        return try PdfExporter().export(sessionId: sessionId, store: store)
+                    }
                 )
             }
         }
@@ -70,11 +84,24 @@ struct RootView: View {
             }
             let page = try store.appendPage(sessionId: sessionId, originalJPEG: jpeg, quad: quad)
             activePageId = page.id
-            let session = try store.loadSession(id: sessionId)
-            pageCount = session.pageIds.count
+            refreshCounts()
             route = .process
         } catch {
             storeError = "ScanSession/Page를 저장하지 못했습니다."
+        }
+    }
+
+    private func refreshCounts() {
+        guard let sessionId = activeSessionId,
+              let session = try? store.loadSession(id: sessionId) else {
+            pageCount = 0
+            cleanedPageCount = 0
+            return
+        }
+        pageCount = session.pageIds.count
+        cleanedPageCount = session.pageIds.reduce(0) { count, pageId in
+            let cleaned = (try? store.loadPage(sessionId: sessionId, pageId: pageId))?.cleanedUri != nil
+            return count + (cleaned ? 1 : 0)
         }
     }
 

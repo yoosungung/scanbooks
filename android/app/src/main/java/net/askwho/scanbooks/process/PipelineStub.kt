@@ -20,7 +20,11 @@ class PipelineStub(
         val visited = mutableListOf<PipelineStage>()
         val stages = PipelineStage.processingOrder + PipelineStage.DONE
         for (stage in stages) {
-            store.updatePageStatus(sessionId, pageId, stage)
+            if (stage == PipelineStage.DONE) {
+                store.finalizeStubCleaned(sessionId, pageId)
+            } else {
+                store.updatePageStatus(sessionId, pageId, stage)
+            }
             visited += stage
             onUpdate(stage)
             if (stage != PipelineStage.DONE && stepDelayMs > 0) delay(stepDelayMs)
