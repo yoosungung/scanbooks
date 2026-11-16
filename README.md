@@ -16,7 +16,7 @@
 
 ## 현황
 
-기획 문서(M0) 확정 및 DocTr 해상도·파이프라인·ORT 쟁점 반영. 엔진 스파이크(M1, export 프로토타입 우선) 대기. 앱 코드와 실행 커맨드는 아직 없습니다.
+기획 문서(M0) 확정. M1 export 프로토타입 측정 완료 — [engine/benches/export_prototype.md](engine/benches/export_prototype.md). 앱 코드는 아직 없습니다.
 
 ## 로컬 quickstart
 

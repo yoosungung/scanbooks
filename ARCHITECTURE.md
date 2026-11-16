@@ -139,7 +139,7 @@ flowchart LR
 
 ## 5. 모델 입출력 계약
 
-`engine/`이 버전 태그와 함께 발행한다. 숫자 근거: 공식 DocTr `inference.py` / `inference_ill.py` 및 논문(GeoTr downsample 288×288, IllTr 128×128 patch · overlap 12.5%).
+`engine/`이 버전 태그와 함께 발행한다. 숫자 근거: 공식 DocTr `inference.py` / `inference_ill.py` 및 논문(GeoTr downsample 288×288, IllTr 128×128 patch · overlap 12.5%). **Export 프로토타입 측정(체크포인트 로드 → ONNX opset17 → ORT CPU 스모크)** 으로 아래 텐서·용량·연산자를 확정했다 — 상세는 `engine/benches/export_prototype.md`.
 
 ### 5.0 해상도 용어 (혼용 금지)
 
@@ -148,9 +148,18 @@ flowchart LR
 | `geoNetSize` | GeoTr(및 seg) **네트워크**에 넣는 정사각 해상도 | **288×288** |
 | `workLongEdge` | flow를 upsample한 뒤 `croppedUri`를 워핑하고 finger/ill이 다루는 **작업 이미지** 긴 변 | **1024** |
 | `illPatchSize` | IllTr **패치** 한 변 | **128** |
-| `illOverlap` | 패치 오버랩 비율 | **12.5%** (`ovlp = 16` px @ 128) |
+| `illOverlap` | 패치 오버랩 비율 | **12.5%** (`ovlp = 16` px @ 128; 공식 주석 `# 32`는 오표기) |
 
 GeoTr에 `workLongEdge` 크기 텐서를 넣지 않는다. Transformer 토큰 수·위치 임베딩·학습 스케일이 288 기준이다.
+
+### 5.0.1 측정된 용량 (공식 체크포인트, weight-only FP16)
+
+| 아티팩트 | params | FP16 | 네트워크 I/O (NCHW, float32) |
+|---|---:|---:|---|
+| `geotr` | 25,747,330 | 49.11 MB | in `1×3×288×288` → out `1×2×288×288` |
+| `illtr` | 12,907,872 | 24.62 MB | in `1×3×128×128` → out `1×3×128×128` |
+| `seg` (U2NETP) | 1,131,181 | 2.16 MB | in `1×3×288×288` → out `1×1×288×288` |
+| **합** | | **75.89 MB** | §5.4 ≤~80 MB 권고 **충족** |
 
 ### 5.1 GeoTr (geo 단계)
 
@@ -158,9 +167,10 @@ GeoTr에 `workLongEdge` 크기 텐서를 넣지 않는다. Transformer 토큰 �
 |---|---|
 | 아티팩트 | `geotr.onnx` (+ 공식 경로 사용 시 `seg.onnx`/`u2netp`). 번들 구성을 `models/` 메타에 명시 |
 | 네트워크 입력 | RGB, DocTr 추론과 동일 스케일(`/255` 등). **288×288**으로 resize |
-| 네트워크 출력 | 288×288×2 backward mapping (DocTr 스케일 변환 `(2*(bm/286.8)-1)*0.99` 포함 여부를 export 그래프에 고정) |
+| 네트워크 출력 | 288×288×2 backward mapping. MVP export는 스케일 변환 `(2*(bm/286.8)-1)*0.99`를 **그래프에 포함** |
 | 워핑 | flow를 **원본 crop 해상도(또는 workLongEdge로 맞춘 크기)** 로 bilinear upsample → blur(공식 3×3) → 샘플링 |
-| 샘플링 규약 | PyTorch `grid_sample(..., align_corners=True)`와 동일 좌표. 모바일은 OpenCV `remap` 등 동등 구현 + 파리티 픽스처 검증 |
+| 샘플링 규약 | PyTorch `grid_sample(..., align_corners=True)`와 동일 좌표. **GridSample은 ONNX에 넣지 않는다**(네트워크 export에 없음). 모바일은 OpenCV `remap` 등 동등 구현 + 파리티 픽스처 검증 |
+| ORT 연산자 | `LayerNormalization`·다수 `Reshape`·`InstanceNormalization` 포함. `Cast`/EP fallback을 latency 벤치에 기록 |
 | 후처리 결과 | `dewarpedUri` |
 
 ### 5.2 FingerSeg (finger 단계)
@@ -180,6 +190,7 @@ GeoTr에 `workLongEdge` 크기 텐서를 넣지 않는다. Transformer 토큰 �
 | 아티팩트 | `illtr.onnx` (입력 **128×128×3** 패치) |
 | 입력 이미지 | finger inpaint 완료본 |
 | 추론 | 공식과 같이 패치 분할(overlap 12.5%)·스티칭. **ORT에서는 패치 배치(batch>1) 1회 호출**을 M1에서 우선 검증 |
+| ORT 연산자 | `LayerNormalization`·`Reshape` 다수. 나이브 export는 내부 pad/crop 루프가 `ScatterND`/`Where`로 펼쳐져 **노드 수·로드 비용이 큼** → export용 forward 단순화(고정 128 패치)를 양자화 전에 선행 |
 | 출력 | 조명 보정본 → 최종 `cleanedUri` |
 | 게이트 미달 시 | stride/overlap 조정 아티팩트 평가 → IllTr 옵션화 또는 경량 full-image 조명 보정으로의 대체(ROADMAP). DocTr GeoTr은 유지 |
 
@@ -194,7 +205,7 @@ GeoTr에 `workLongEdge` 크기 텐서를 넣지 않는다. Transformer 토큰 �
 
 **양자화:** GeoTr/IllTr에 활성화까지 깎는 static INT8을 기본으로 쓰지 않는다. flow regression·Transformer는 **weight-only INT8 / dynamic quantization / attention·flow head 제외 mixed precision**만 후보로 한다.
 
-**EP 벤치:** `benches/latency.md`에 최소 `CPU×FP32`, `CPU×weight-INT8`, `CoreML|NNAPI×FP16`을 분리 기록하고, GridSample·LayerNorm·동적 Reshape 등으로 인한 **CPU fallback·Cast 삽입** 여부를 프로파일한다. FP16이 CPU EP에서 FP32보다 느리면 해당 EP 조합을 기본 경로로 채택하지 않는다.
+**EP 벤치:** `benches/latency.md`에 최소 `CPU×FP32`, `CPU×weight-INT8`, `CoreML|NNAPI×FP16`을 분리 기록하고, **LayerNormalization·동적 Reshape**(및 후처리 remap; GridSample은 네트워크 ONNX에 없음)으로 인한 **CPU fallback·Cast 삽입** 여부를 프로파일한다. FP16이 CPU EP에서 FP32보다 느리면 해당 EP 조합을 기본 경로로 채택하지 않는다.
 
 **미달 완화(DocTr 유지):** `workLongEdge` 768 → IllTr 옵션화 → IllTr 경량 대체. GeoTr 네트워크 입력을 1024로 키우지 않는다.
 
