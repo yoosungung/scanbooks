@@ -38,7 +38,7 @@ engine/
       golden/             # 실험 매트릭스 골든
       parity/             # 전처리 텐서 + raw_flow/warped + raw_mask/inpainted
   benches/
-    latency.md            # (예정)
+    latency.md            # EP×정밀도 벤치 + e2e 게이트
     fingerseg_candidates.md
     quantize_candidates.md
     experiment_matrix.md
@@ -101,8 +101,9 @@ GeoTr에 work 해상도 텐서를 넣지 않는다.
 
 - 금지(기본): static INT8(활성화 양자화)로 GeoTr flow 배포
 - 후보: weight-only INT8 (`MatMulNBits` bits=8), dynamic INT8, attention/flow-head 제외 mixed(미측정)
-- 측정·권고: [benches/quantize_candidates.md](benches/quantize_candidates.md) — GeoTr either(dyn 용량 vs WO 오차), IllTr WO 우선(단 export 그래프 단순화 선행), Seg는 FP16/FP32 유지
-- `latency.md` 필수 행: CPU FP32, CPU weight-INT8, CoreML/NNAPI FP16 + fallback 노트
+- 측정·권고: [benches/quantize_candidates.md](benches/quantize_candidates.md) — GeoTr **`dynamic_int8`**(latency 확정), IllTr WO 우선(단 export 그래프 단순화 선행), Seg는 FP16/FP32 유지
+- `latency.md` 필수 행: CPU FP32, CPU weight-INT8, CoreML MLProgram·NE(FP16 compute)/NNAPI deferred + fallback 노트 — [benches/latency.md](benches/latency.md)
+- 기본 EP(Apple host): CoreML MLProgram NeuralEngine + CPU fallback; GeoTr e2e ≈0.13 s(pass). IllTr 순차 81패치 ≈11 s(fail) → export 단순화·배치 선행
 
 ## 품질 기준
 
@@ -132,9 +133,10 @@ scanbooks-quantize-candidates --frozen   # writes benches/quantize_candidates.{j
 # optional re-measure (needs DocTr checkout + weights + CPU device patches):
 # DOCTR_ROOT=/path/to/DocTr scanbooks-export-doctr
 # scanbooks-quantize-candidates --onnx-dir /tmp/doctr-onnx --out-dir benches/onnx_quant
+# scanbooks-latency-bench --onnx-dir /tmp/doctr-onnx --quant-dir /tmp/doctr-onnx/quant
 # optional regenerate parity (no-op if files already present):
 # python -c "from pathlib import Path; from scanbooks_engine.parity_fixtures import ensure_parity_fixtures; ensure_parity_fixtures(Path('tests/fixtures/parity'))"
-pytest tests/test_finger_pipeline.py -q
+pytest tests/test_latency.py -q
 ```
 
-Export: [benches/export_prototype.md](benches/export_prototype.md). 매트릭스: [benches/experiment_matrix.md](benches/experiment_matrix.md). 양자화: [benches/quantize_candidates.md](benches/quantize_candidates.md). FingerSeg: [benches/fingerseg_candidates.md](benches/fingerseg_candidates.md). 파리티: `tests/fixtures/parity/manifest.json`.
+Export: [benches/export_prototype.md](benches/export_prototype.md). 매트릭스: [benches/experiment_matrix.md](benches/experiment_matrix.md). 양자화: [benches/quantize_candidates.md](benches/quantize_candidates.md). FingerSeg: [benches/fingerseg_candidates.md](benches/fingerseg_candidates.md). Latency: [benches/latency.md](benches/latency.md). 파리티: `tests/fixtures/parity/manifest.json`.

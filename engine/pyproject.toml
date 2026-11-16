@@ -25,6 +25,7 @@ dev = ["pytest"]
 scanbooks-export-doctr = "scanbooks_engine.export_doctr:main"
 scanbooks-experiment-matrix = "scanbooks_engine.experiment_matrix:main"
 scanbooks-quantize-candidates = "scanbooks_engine.quantize:main"
+scanbooks-latency-bench = "scanbooks_engine.latency:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

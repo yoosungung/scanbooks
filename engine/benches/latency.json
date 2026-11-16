@@ -1,0 +1,245 @@
+{
+  "ticket": "3ad0ee61-1d56-4846-9b4b-411aa1e5a301",
+  "gates": {
+    "geotr_e2e_s_budget": 2.5,
+    "illtr_e2e_s_budget": 3.5,
+    "work_long_edge": 1024,
+    "geo_net_size": 288,
+    "ill_patch_size": 128
+  },
+  "rows": {
+    "cpu_fp32": {
+      "geotr": {
+        "status": "ok",
+        "ms": 187.96,
+        "providers_requested": [
+          "CPUExecutionProvider"
+        ],
+        "providers_used": [
+          "CPUExecutionProvider"
+        ],
+        "fallback_to_cpu": false
+      },
+      "illtr": {
+        "status": "ok",
+        "ms": 136.1,
+        "providers_requested": [
+          "CPUExecutionProvider"
+        ],
+        "providers_used": [
+          "CPUExecutionProvider"
+        ],
+        "fallback_to_cpu": false
+      },
+      "seg": {
+        "status": "ok",
+        "ms": 53.91,
+        "providers_requested": [
+          "CPUExecutionProvider"
+        ],
+        "providers_used": [
+          "CPUExecutionProvider"
+        ],
+        "fallback_to_cpu": false
+      }
+    },
+    "cpu_weight_int8": {
+      "geotr": {
+        "status": "ok",
+        "ms": 199.02,
+        "providers_requested": [
+          "CPUExecutionProvider"
+        ],
+        "providers_used": [
+          "CPUExecutionProvider"
+        ],
+        "fallback_to_cpu": false
+      },
+      "illtr": {
+        "status": "ok",
+        "ms": 134.55,
+        "providers_requested": [
+          "CPUExecutionProvider"
+        ],
+        "providers_used": [
+          "CPUExecutionProvider"
+        ],
+        "fallback_to_cpu": false
+      },
+      "seg": {
+        "status": "ok",
+        "ms": 52.1,
+        "providers_requested": [
+          "CPUExecutionProvider"
+        ],
+        "providers_used": [
+          "CPUExecutionProvider"
+        ],
+        "fallback_to_cpu": false
+      }
+    },
+    "cpu_dynamic_int8": {
+      "geotr": {
+        "status": "ok",
+        "ms": 187.74,
+        "providers_requested": [
+          "CPUExecutionProvider"
+        ],
+        "providers_used": [
+          "CPUExecutionProvider"
+        ],
+        "fallback_to_cpu": false
+      },
+      "illtr": {
+        "status": "ok",
+        "ms": 135.08,
+        "providers_requested": [
+          "CPUExecutionProvider"
+        ],
+        "providers_used": [
+          "CPUExecutionProvider"
+        ],
+        "fallback_to_cpu": false
+      },
+      "seg": {
+        "status": "ok",
+        "ms": 51.08,
+        "providers_requested": [
+          "CPUExecutionProvider"
+        ],
+        "providers_used": [
+          "CPUExecutionProvider"
+        ],
+        "fallback_to_cpu": false
+      }
+    },
+    "coreml_fp16": {
+      "geotr": {
+        "status": "ok",
+        "ms": 121.61,
+        "providers_requested": [
+          "CoreMLExecutionProvider",
+          "CPUExecutionProvider"
+        ],
+        "providers_used": [
+          "CoreMLExecutionProvider",
+          "CPUExecutionProvider"
+        ],
+        "fallback_to_cpu": true,
+        "note": "MLProgram + CPUAndNeuralEngine on FP32 ONNX (graph float16 convert fails Cast/Conv types; NE compute \u2248 FP16)"
+      },
+      "illtr": {
+        "status": "skipped_illtr_compile_risk",
+        "ms": null,
+        "note": "IllTr ~123k nodes \u2014 CoreML MLProgram compile deferred; simplify export first"
+      },
+      "seg": {
+        "status": "ok",
+        "ms": 27.59,
+        "providers_requested": [
+          "CoreMLExecutionProvider",
+          "CPUExecutionProvider"
+        ],
+        "providers_used": [
+          "CoreMLExecutionProvider",
+          "CPUExecutionProvider"
+        ],
+        "fallback_to_cpu": true,
+        "note": "MLProgram + CPUAndNeuralEngine on FP32 ONNX (graph float16 convert fails Cast/Conv types; NE compute \u2248 FP16)"
+      }
+    },
+    "nnapi_fp16": {
+      "geotr": {
+        "status": "deferred_android_only",
+        "ms": null,
+        "note": "NNAPI EP requires Android ORT Mobile \u2014 not available on this macOS host"
+      },
+      "illtr": {
+        "status": "deferred_android_only",
+        "ms": null,
+        "note": "NNAPI EP requires Android ORT Mobile \u2014 not available on this macOS host"
+      },
+      "seg": {
+        "status": "deferred_android_only",
+        "ms": null,
+        "note": "NNAPI EP requires Android ORT Mobile \u2014 not available on this macOS host"
+      }
+    }
+  },
+  "e2e": {
+    "cpu_fp32": {
+      "geotr_e2e_s": 0.192,
+      "geotr_gate_pass": true,
+      "illtr_e2e_s_est": 11.024,
+      "illtr_gate_pass": false,
+      "illtr_note": "sequential 81 patches \u00d7 single-patch ms (batch>1 not measured \u2014 IllTr ~123k-node graph load risk)"
+    },
+    "cpu_weight_int8": {
+      "geotr_e2e_s": 0.203,
+      "geotr_gate_pass": true,
+      "illtr_e2e_s_est": 10.899,
+      "illtr_gate_pass": false,
+      "illtr_note": "sequential 81 patches \u00d7 single-patch ms (batch>1 not measured \u2014 IllTr ~123k-node graph load risk)"
+    },
+    "cpu_dynamic_int8": {
+      "geotr_e2e_s": 0.192,
+      "geotr_gate_pass": true,
+      "illtr_e2e_s_est": 10.941,
+      "illtr_gate_pass": false,
+      "illtr_note": "sequential 81 patches \u00d7 single-patch ms (batch>1 not measured \u2014 IllTr ~123k-node graph load risk)"
+    },
+    "coreml_fp16": {
+      "geotr_e2e_s": 0.126,
+      "geotr_gate_pass": true,
+      "illtr_e2e_s_est": null,
+      "illtr_gate_pass": null,
+      "illtr_note": "sequential 81 patches \u00d7 single-patch ms (batch>1 not measured \u2014 IllTr ~123k-node graph load risk)"
+    }
+  },
+  "meta": {
+    "available_providers": [
+      "CoreMLExecutionProvider",
+      "AzureExecutionProvider",
+      "CPUExecutionProvider"
+    ],
+    "op_notes": {
+      "geotr": {
+        "GridSample": "absent from network ONNX \u2014 keep warp as OpenCV remap post-process",
+        "LayerNormalization": "present \u2014 CoreML/NNAPI may Cast/decompose; profile fallback",
+        "Reshape": "present (n=134) \u2014 prefer static shapes; watch dynamic reshape on mobile EP"
+      },
+      "illtr": {
+        "GridSample": "absent from network ONNX \u2014 keep warp as OpenCV remap post-process",
+        "LayerNormalization": "present \u2014 CoreML/NNAPI may Cast/decompose; profile fallback",
+        "Reshape": "present (n=3108) \u2014 prefer static shapes; watch dynamic reshape on mobile EP"
+      },
+      "seg": {
+        "GridSample": "absent from network ONNX \u2014 keep warp as OpenCV remap post-process",
+        "LayerNormalization": "absent",
+        "Reshape": "absent"
+      }
+    },
+    "postprocess": {
+      "upsample_remap_ms": 4.3
+    },
+    "ill_patch_count_1024": 81,
+    "host": "Darwin arm64",
+    "coreml_path": "MLProgram+NeuralEngine on FP32 weights (FP16 compute)"
+  },
+  "fallback_notes": {
+    "LayerNormalization": "present \u2014 CoreML/NNAPI may Cast/decompose; profile fallback",
+    "Reshape": "present (n=134) \u2014 prefer static shapes; watch dynamic reshape on mobile EP",
+    "GridSample": "absent from network ONNX \u2014 warp is OpenCV remap post-process (measured separately)",
+    "coreml_partition": "providers_used=['CoreMLExecutionProvider', 'CPUExecutionProvider']; fallback_to_cpu=True",
+    "nnapi": "deferred_android_only \u2014 measure on device with ORT Mobile NNAPI EP",
+    "cpu_fp16_policy": "CPU\u00d7FP16 not a required ship path; ARCHITECTURE: if CPU FP16 slower than CPU FP32, do not adopt that combo as default.",
+    "coreml_vs_cpu": "CoreML NE geotr 121.61 ms < CPU FP32 187.96 ms \u2014 prefer CoreML MLProgram on Apple hosts"
+  },
+  "recommendation": {
+    "default_ep": "CoreML_MLProgram_NeuralEngine+CPU_fallback",
+    "geotr_quant": "dynamic_int8",
+    "geotr_quant_note": "CPU dyn 187.74 ms / WO 199.02 ms; errors from quantize_candidates (dyn max_abs\u22480.0037, WO\u22485e-4)",
+    "illtr": "blocked_on_export_simplify \u2014 latency dominated by ~123k-node graph; WO still preferred size",
+    "seg": "keep_fp16_or_fp32 \u2014 not on critical path for EP pick"
+  }
+}
