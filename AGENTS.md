@@ -38,5 +38,5 @@ This file provides guidance to AI coding assistants (Claude Code, Codex, Gemini,
  
 ## 3. Status
 
-기획 문서 확정 + M1 착수 전 기술 정정(GeoTr 288 vs work 1024, IllTr 패치, geo→finger→ill, BBox crop, ORT/양자화/파리티). M1 엔진 스파이크(export 프로토타입 우선) 대기.
+M0 문서 확정. M1 export 프로토타입 측정 완료(`engine/benches/export_prototype.md`, ARCHITECTURE §5 확정). 다음: 파이프라인 실험 매트릭스 → 파리티 픽스처.
 

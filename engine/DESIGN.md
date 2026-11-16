@@ -99,4 +99,13 @@ GeoTr에 work 해상도 텐서를 넣지 않는다.
 
 ## Commands
 
-코드 진입 전이라 명령을 적지 않는다. M1에서 `.venv` 기준 `pytest` / export CLI를 추가한다.
+```bash
+cd engine
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e '.[doctr,dev]'
+pytest
+# optional re-measure (needs DocTr checkout + weights + CPU device patches):
+# DOCTR_ROOT=/path/to/DocTr scanbooks-export-doctr
+```
+
+Export 측정 결과: [benches/export_prototype.md](benches/export_prototype.md).
