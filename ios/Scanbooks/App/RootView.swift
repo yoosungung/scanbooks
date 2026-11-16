@@ -4,6 +4,7 @@ struct RootView: View {
     @State private var route: AppRoute = .camera
     @State private var sessionTitle: String = Self.defaultTitle()
     @State private var activeSessionId: String?
+    @State private var activePageId: String?
     @State private var pageCount: Int = 0
     @State private var storeError: String?
 
@@ -26,10 +27,18 @@ struct RootView: View {
                     onOpenSession: { route = .session }
                 )
             case .process:
-                ProcessStubView(
-                    onFinished: { route = .camera },
-                    onCancel: { route = .camera }
-                )
+                if let sessionId = activeSessionId, let pageId = activePageId {
+                    ProcessStubView(
+                        store: store,
+                        sessionId: sessionId,
+                        pageId: pageId,
+                        onFinished: { route = .camera },
+                        onCancel: { route = .camera }
+                    )
+                } else {
+                    Color.black.ignoresSafeArea()
+                        .onAppear { route = .camera }
+                }
             case .session:
                 SessionView(
                     title: $sessionTitle,
@@ -59,7 +68,8 @@ struct RootView: View {
                 activeSessionId = session.id
                 sessionId = session.id
             }
-            _ = try store.appendPage(sessionId: sessionId, originalJPEG: jpeg, quad: quad)
+            let page = try store.appendPage(sessionId: sessionId, originalJPEG: jpeg, quad: quad)
+            activePageId = page.id
             let session = try store.loadSession(id: sessionId)
             pageCount = session.pageIds.count
             route = .process

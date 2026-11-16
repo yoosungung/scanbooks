@@ -23,7 +23,7 @@ ios/
     App/                   # ScanbooksApp, RootView
     Camera/                # preview, Vision+rough quad, photo shutter
     Storage/               # SessionStore — sessions/{id}/pages/{pageId}/
-    Process/               # StubProcessRunner + stage list UI
+    Process/               # PipelineStub + StubProcessRunner + stage list UI
     Session/               # grid + PDF CTA stub
     Models/                # AppRoute, PipelineStage, ScanSession, Page, Quad, …
   ScanbooksTests/
@@ -32,7 +32,8 @@ ios/
 ## 파이프라인 러너
 
 - 순서: `crop → geo → finger → ill → done` ([ARCHITECTURE §1.3](../ARCHITECTURE.md))
-- M2: `StubProcessRunner`가 단계 UI만 순회 (ORT 없음)
+- M2: `PipelineStub`가 단계 UI + `Page.status` 디스크 반영 (ORT/OpenCV 없음)
+- `StubProcessRunner`는 순수 UI/단위 테스트용 잔존
 - 프리뷰: Dewarp 없음 ([ARCHITECTURE §1.4](../ARCHITECTURE.md))
 
 ## 저장

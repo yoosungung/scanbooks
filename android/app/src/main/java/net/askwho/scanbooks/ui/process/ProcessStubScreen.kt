@@ -29,18 +29,22 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import net.askwho.scanbooks.model.PipelineStage
-import net.askwho.scanbooks.process.StubProcessRunner
+import net.askwho.scanbooks.process.PipelineStub
+import net.askwho.scanbooks.storage.SessionStore
 
 @Composable
 fun ProcessStubScreen(
+    store: SessionStore,
+    sessionId: String,
+    pageId: String,
     onFinished: () -> Unit,
     onCancel: () -> Unit,
 ) {
     var current by remember { mutableStateOf(PipelineStage.CROP) }
-    val runner = remember { StubProcessRunner() }
+    val stub = remember { PipelineStub() }
 
-    LaunchedEffect(Unit) {
-        runner.run { stage -> current = stage }
+    LaunchedEffect(sessionId, pageId) {
+        stub.run(store, sessionId, pageId) { stage -> current = stage }
         if (current == PipelineStage.DONE) {
             delay(400)
             onFinished()
