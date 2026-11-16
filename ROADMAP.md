@@ -50,7 +50,7 @@ factory `pm-roadmap-sync`는 `##` 아래 **`- [ ]` / `- [x]`** 만 enqueue한다
 - [ ] 단장 촬영, 로컬 `ScanSession`/`Page` 저장(중간 PNG)
 - [ ] 파이프라인 stub(`crop→geo→finger→ill` 상태 전이)
 - [x] 파리티 픽스처로 remap/inpaint 단위 테스트 훅 준비 — 증거: `CvBridge` + `ParityRemapInpaintHookTests`/`ParityRemapInpaintHookTest` (remap 파리티 live; inpaint OpenCV 훅)
-- [ ] `cleanedUri`(또는 stub) → PDF export
+- [x] `cleanedUri`(또는 stub) → PDF export — 증거: `PdfExporter`/`PdfExporterTests`·`PdfExporterTest` + PipelineStub `cleaned.png`
 - [ ] vFlat/OSS Document Scanner UX는 참고만(복제·포크 금지)
 
 **완료 기준:** 양 플랫폼에서 촬영→(stub)→PDF 수동 스모크 통과.

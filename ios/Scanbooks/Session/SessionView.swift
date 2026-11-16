@@ -1,12 +1,15 @@
 import SwiftUI
 
-/// Simple Session shell + PDF CTA path (real PdfDocument export = later M2 slice).
+/// Session grid + PDF export from `cleanedUri` pages (PDFKit).
 struct SessionView: View {
     @Binding var title: String
     let pageCount: Int
+    let cleanedPageCount: Int
     let onBack: () -> Void
+    let onExportPdf: () throws -> String
 
-    @State private var showPdfStub = false
+    @State private var exportMessage: String?
+    @State private var exportFailed = false
 
     var body: some View {
         NavigationStack {
@@ -15,7 +18,7 @@ struct SessionView: View {
                     .textFieldStyle(.roundedBorder)
                     .font(.title3.weight(.semibold))
 
-                Text("\(pageCount)장")
+                Text("\(pageCount)장 · 완료 \(cleanedPageCount)장")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
@@ -34,10 +37,14 @@ struct SessionView: View {
                                         .font(.headline)
                                 }
                                 .overlay(alignment: .topTrailing) {
-                                    Text("완료")
+                                    Text(index < cleanedPageCount ? "완료" : "대기")
                                         .font(.caption2.weight(.semibold))
                                         .padding(4)
-                                        .background(.green.opacity(0.85), in: Capsule())
+                                        .background(
+                                            (index < cleanedPageCount ? Color.green : Color.orange)
+                                                .opacity(0.85),
+                                            in: Capsule()
+                                        )
                                         .padding(6)
                                 }
                         }
@@ -47,13 +54,20 @@ struct SessionView: View {
                 Spacer()
 
                 Button {
-                    showPdfStub = true
+                    do {
+                        let uri = try onExportPdf()
+                        exportFailed = false
+                        exportMessage = "저장됨: \(uri)"
+                    } catch {
+                        exportFailed = true
+                        exportMessage = "완료된(cleanedUri) 페이지가 없어 PDF를 만들지 못했습니다."
+                    }
                 } label: {
                     Label("PDF로 내보내기", systemImage: "doc.richtext")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(pageCount == 0)
+                .disabled(cleanedPageCount == 0)
                 .accessibilityLabel("PDF로 내보내기")
             }
             .padding()
@@ -64,15 +78,24 @@ struct SessionView: View {
                     Button("카메라", action: onBack)
                 }
             }
-            .alert("PDF 경로 (stub)", isPresented: $showPdfStub) {
-                Button("확인", role: .cancel) {}
+            .alert(exportFailed ? "PDF 내보내기 실패" : "PDF 내보내기", isPresented: Binding(
+                get: { exportMessage != nil },
+                set: { if !$0 { exportMessage = nil } }
+            )) {
+                Button("확인", role: .cancel) { exportMessage = nil }
             } message: {
-                Text("완료된 \(pageCount)장을 PDF로 내보내는 경로는 연결됐습니다. 실제 PDFKit 쓰기는 후속 M2 슬라이스에서 구현합니다.")
+                Text(exportMessage ?? "")
             }
         }
     }
 }
 
 #Preview {
-    SessionView(title: .constant("테스트"), pageCount: 2, onBack: {})
+    SessionView(
+        title: .constant("테스트"),
+        pageCount: 2,
+        cleanedPageCount: 2,
+        onBack: {},
+        onExportPdf: { "export.pdf" }
+    )
 }

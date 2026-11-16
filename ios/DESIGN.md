@@ -9,7 +9,7 @@ iOS 네이티브 앱 내부 설계. 계약·스키마는 [ARCHITECTURE.md](../AR
 - 로컬 `ScanSession` / `Page` 저장 (`Storage/SessionStore`)
 - ONNX Runtime Mobile로 네트워크 추론 (후속)
 - **flow remap** (`CvBridge.remap`, align_corners) · Telea/NS inpaint는 OpenCV 연동 시 동일 훅으로 잠금 (M3)
-- PDFKit export (후속; Session에 CTA stub)
+- PDFKit export (`Export/PdfExporter` → `export.pdf` / `exportPdfUri`)
 
 모델 학습·ONNX 변환은 `engine/` 몫이다.
 
@@ -24,7 +24,8 @@ ios/
     Camera/                # preview, Vision+rough quad, photo shutter
     Storage/               # SessionStore — sessions/{id}/pages/{pageId}/
     Process/               # PipelineStub + StubProcessRunner + stage list UI
-    Session/               # grid + PDF CTA stub
+    Session/               # grid + PDF CTA
+    Export/                # PdfExporter (cleanedUri → PDFKit)
     CvBridge/              # remap (pure Swift) + inpaintTelea 훅(OpenCV pending)
     Models/                # AppRoute, PipelineStage, ScanSession, Page, Quad, …
   ScanbooksTests/          # + engine parity fixtures 리소스
@@ -33,7 +34,7 @@ ios/
 ## 파이프라인 러너
 
 - 순서: `crop → geo → finger → ill → done` ([ARCHITECTURE §1.3](../ARCHITECTURE.md))
-- M2: `PipelineStub`가 단계 UI + `Page.status` 디스크 반영 (ORT/OpenCV 없음)
+- M2: `PipelineStub`가 단계 UI + `Page.status` 디스크 반영; `done` 시 stub `cleaned.png` (ORT/OpenCV 없음)
 - `StubProcessRunner`는 순수 UI/단위 테스트용 잔존
 - 프리뷰: Dewarp 없음 ([ARCHITECTURE §1.4](../ARCHITECTURE.md))
 
@@ -41,7 +42,8 @@ ios/
 
 - Application Support `scanbooks/sessions/{sessionId}/session.json`
 - `pages/{pageId}/page.json` + `original.jpg` + mid `working.png` (capture-time lossless)
-- 후속 단계: `cropped.png` / `dewarped.png` / `cleaned.png`
+- 후속 단계: `cropped.png` / `dewarped.png` / `cleaned.png` (M2 stub는 working→cleaned 복사)
+- PDF: `cleanedUri` 있는 페이지만 `sessions/{id}/export.pdf` ([ARCHITECTURE §6](../ARCHITECTURE.md))
 - 단계 간 JPEG 재인코딩 금지 ([ARCHITECTURE §1.11](../ARCHITECTURE.md))
 - 셔터 → `AVCapturePhotoOutput` JPEG → `appendPage` → stub Process 화면
 
