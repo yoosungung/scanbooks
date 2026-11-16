@@ -1,11 +1,14 @@
 import SwiftUI
 
 struct ProcessStubView: View {
+    let store: SessionStore
+    let sessionId: String
+    let pageId: String
     let onFinished: () -> Void
     let onCancel: () -> Void
 
     @State private var current: PipelineStage = .crop
-    @State private var runner = StubProcessRunner()
+    @State private var stub = PipelineStub()
 
     var body: some View {
         ZStack {
@@ -45,7 +48,7 @@ struct ProcessStubView: View {
             .padding()
         }
         .onAppear {
-            runner.run { stage in
+            stub.run(store: store, sessionId: sessionId, pageId: pageId) { stage in
                 current = stage
                 if stage == .done {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
@@ -79,8 +82,4 @@ struct ProcessStubView: View {
         if stage == current { return "진행 중" }
         return "대기"
     }
-}
-
-#Preview {
-    ProcessStubView(onFinished: {}, onCancel: {})
 }

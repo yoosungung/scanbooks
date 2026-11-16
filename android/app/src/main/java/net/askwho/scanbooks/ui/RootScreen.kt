@@ -28,6 +28,7 @@ fun RootScreen() {
     var pageCount by remember { mutableIntStateOf(0) }
     var sessionTitle by remember { mutableStateOf(defaultTitle()) }
     var activeSessionId by remember { mutableStateOf<String?>(null) }
+    var activePageId by remember { mutableStateOf<String?>(null) }
     var storeError by remember { mutableStateOf<String?>(null) }
 
     if (storeError != null) {
@@ -51,8 +52,9 @@ fun RootScreen() {
                     sessionTitle = sessionTitle,
                     jpeg = jpeg,
                     quad = quad,
-                    onSuccess = { sessionId, count ->
+                    onSuccess = { sessionId, pageId, count ->
                         activeSessionId = sessionId
+                        activePageId = pageId
                         pageCount = count
                         route = AppRoute.PROCESS
                     },
@@ -61,10 +63,19 @@ fun RootScreen() {
             },
             onOpenSession = { route = AppRoute.SESSION },
         )
-        AppRoute.PROCESS -> ProcessStubScreen(
-            onFinished = { route = AppRoute.CAMERA },
-            onCancel = { route = AppRoute.CAMERA },
-        )
+        AppRoute.PROCESS -> {
+            val sessionId = activeSessionId
+            val pageId = activePageId
+            if (sessionId != null && pageId != null) {
+                ProcessStubScreen(
+                    store = store,
+                    sessionId = sessionId,
+                    pageId = pageId,
+                    onFinished = { route = AppRoute.CAMERA },
+                    onCancel = { route = AppRoute.CAMERA },
+                )
+            }
+        }
         AppRoute.SESSION -> SessionScreen(
             title = sessionTitle,
             onTitleChange = { sessionTitle = it },
@@ -80,14 +91,14 @@ private fun persistCapture(
     sessionTitle: String,
     jpeg: ByteArray,
     quad: Quad?,
-    onSuccess: (sessionId: String, pageCount: Int) -> Unit,
+    onSuccess: (sessionId: String, pageId: String, pageCount: Int) -> Unit,
     onError: () -> Unit,
 ) {
     try {
         val sessionId = activeSessionId ?: store.createSession(title = sessionTitle).id
-        store.appendPage(sessionId = sessionId, originalJpeg = jpeg, quad = quad)
+        val page = store.appendPage(sessionId = sessionId, originalJpeg = jpeg, quad = quad)
         val count = store.loadSession(sessionId).pageIds.size
-        onSuccess(sessionId, count)
+        onSuccess(sessionId, page.id, count)
     } catch (_: Exception) {
         onError()
     }

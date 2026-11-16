@@ -33,7 +33,8 @@ android/
 ## 파이프라인 러너
 
 - 순서: `crop → geo → finger → ill → done`
-- M2: `StubProcessRunner` 코루틴 단계 UI
+- M2: `PipelineStub` 코루틴 단계 UI + `Page.status` 디스크 반영 (ORT/OpenCV 없음)
+- `StubProcessRunner`는 순수 단위 테스트용 잔존
 - 프리뷰: Dewarp 없음
 
 ## 저장
