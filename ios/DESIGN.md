@@ -13,48 +13,49 @@ iOS 네이티브 앱 내부 설계. 계약·스키마는 [ARCHITECTURE.md](../AR
 
 모델 학습·ONNX 변환은 `engine/` 몫이다.
 
-## 내부 구조 (예정)
+## 내부 구조
 
 ```
 ios/
   DESIGN.md
+  project.yml              # XcodeGen
+  Scanbooks.xcodeproj/     # generated
   Scanbooks/
-    App/
-    Camera/           # preview, capture, quad overlay → BBox+margin
-    Pipeline/         # crop → geo → finger → ill
-    Ort/              # EP 선택, 세션 재사용
-    CvBridge/         # remap, inpaint, morph, CC filter
-    Models/
-    Storage/
-    Export/
-    UI/
-  ScanbooksTests/     # 파리티 픽스처 소비
+    App/                   # ScanbooksApp, RootView (route shell)
+    Camera/                # M2: 1페이지 chrome + placeholder quad
+    Process/               # M2: StubProcessRunner + stage list UI
+    Session/               # M2: grid + PDF CTA stub alert
+    Models/                # AppRoute, PipelineStage
+  ScanbooksTests/
 ```
+
+M2 first slice: UI shell only. Live camera / Vision quad / disk `ScanSession` / PDFKit bytes = 후속 슬라이스.
 
 ## 파이프라인 러너
 
 - 순서: `crop → geo → finger → ill → done` ([ARCHITECTURE §1.3](../ARCHITECTURE.md))
-- `geo`: ORT(288 입력) → flow upsample → `align_corners=True` 동등 remap → `dewarped.png`
-- `finger`: ORT 마스크 → 외곽 CC 필터 → inpaint
-- `ill`: 128 패치 배치 ORT → stitch → `cleaned.png`
-- 실패 시 `failedStage`부터 재시도
+- M2: `StubProcessRunner`가 단계 UI만 순회 (ORT 없음)
+- M3+: `geo` ORT → remap → finger → ill → `cleaned.png`
 
 ## 저장
 
-- `sessions/{sessionId}/`
-- `original.jpg` (원본만 JPEG 허용)
-- `cropped.png`, `dewarped.png`, `cleaned.png` (중간·최종 무손실)
-- 단계 간 JPEG 재인코딩 금지
+- `sessions/{sessionId}/` (후속)
+- `original.jpg`; 중간·최종 PNG; 단계 간 JPEG 재인코딩 금지
 
 ## 파리티
 
-- `engine/tests/fixtures/`의 flow/mask 픽스처로 `CvBridge` 단위 테스트
-- 전처리 상수·좌표 규약은 engine 스펙만 사용
+- `engine/tests/fixtures/` → `CvBridge` 단위 테스트 (후속)
 
 ## UX
 
-공통 스펙은 [docs/UIUX.md](../docs/UIUX.md). 이 문서는 네이티브 모듈·저장·CV 링크만 다룬다.
+공통 스펙은 [docs/UIUX.md](../docs/UIUX.md).
 
 ## Commands
 
-Xcode 프로젝트 생성 전이라 명령을 적지 않는다. M2에서 빌드·테스트 커맨드를 추가한다.
+```bash
+cd ios
+xcodegen generate
+xcodebuild test -scheme Scanbooks -destination 'platform=iOS Simulator,name=iPhone 17,OS=27.0'
+```
+
+시뮬레이터 이름이 환경마다 다르면 `xcrun simctl list devices available`으로 destination을 맞춘다.

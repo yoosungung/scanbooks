@@ -4,7 +4,7 @@ Android 네이티브 앱 내부 설계. 계약·스키마는 [ARCHITECTURE.md](.
 
 ## 책임
 
-- Jetpack Compose(또는 XML) UI, CameraX 프리뷰
+- Jetpack Compose UI, CameraX 프리뷰
 - 실시간 문서 테두리(ML Kit 또는 OpenCV)
 - 로컬 `ScanSession` / `Page` 저장
 - ONNX Runtime Mobile로 네트워크 추론
@@ -13,35 +13,32 @@ Android 네이티브 앱 내부 설계. 계약·스키마는 [ARCHITECTURE.md](.
 
 모델 학습·ONNX 변환은 `engine/` 몫이다.
 
-## 내부 구조 (예정)
+## 내부 구조
 
 ```
 android/
   DESIGN.md
+  settings.gradle.kts
   app/
     src/main/java/.../scanbooks/
-      camera/          # quad → BBox+margin crop
-      pipeline/        # crop → geo → finger → ill
-      ort/
-      cv/              # remap, inpaint, morph, CC filter
-      data/
-      export/
-      ui/
-    src/test/          # 파리티 픽스처
-    src/androidTest/
+      model/           # AppRoute, PipelineStage
+      process/         # StubProcessRunner
+      ui/camera|process|session/
+      MainActivity.kt
+    src/test/          # stage/route/stub unit tests
 ```
+
+M2 first slice: UI shell only. CameraX / 실테두리 / filesDir 세션 / PdfDocument bytes = 후속 슬라이스.
 
 ## 파이프라인 러너
 
 - 순서: `crop → geo → finger → ill → done`
-- ORT 세션 프로세스 내 재사용; EP는 M1 벤치 결과로 고정
-- IllTr 패치는 가능하면 배치 입력으로 한 세션 호출에 모은다
-- 전·후처리는 engine 픽스처로 비트/허용오차 검증
+- M2: `StubProcessRunner` 코루틴 단계 UI
+- M3+: ORT 세션 재사용 + engine 픽스처 파리티
 
 ## 저장
 
-- `context.filesDir/sessions/{sessionId}/`
-- `original.jpg`; 중간·최종 `cropped.png` / `dewarped.png` / `cleaned.png`
+- `context.filesDir/sessions/{sessionId}/` (후속)
 - 스키마 필드명·단계 enum은 iOS·ARCHITECTURE와 동일
 
 ## 파리티
@@ -50,8 +47,12 @@ android/
 
 ## UX
 
-공통 스펙은 [docs/UIUX.md](../docs/UIUX.md). CAMERA 권한·네이티브 모듈은 이 문서·구현에서 다룬다.
+공통 스펙은 [docs/UIUX.md](../docs/UIUX.md). CAMERA 권한은 Manifest에 선언; 셸은 권한 거부 루프 없이 placeholder 프리뷰.
 
 ## Commands
 
-Gradle 프로젝트 생성 전이라 명령을 적지 않는다. M2에서 `./gradlew` 테스트·빌드 커맨드를 추가한다.
+```bash
+cd android
+./gradlew test
+./gradlew :app:assembleDebug
+```
