@@ -1,0 +1,65 @@
+{
+  "ticket": "3817f270-425f-4ed1-927b-54f07a009cae",
+  "golden_ids": [
+    "curved_book",
+    "thumb_occlusion",
+    "printed_hand"
+  ],
+  "crop_margin_ratio": 0.05,
+  "pipeline_default_order": [
+    "crop",
+    "geo",
+    "finger",
+    "ill",
+    "done"
+  ],
+  "c1": {
+    "curved_book": {
+      "bbox_margin_retention": 1.0,
+      "homography_retention": 0.9621,
+      "winner": "bbox_margin",
+      "margin_ratio": 0.05
+    }
+  },
+  "s1": {
+    "thumb_occlusion": {
+      "geo_finger_ill": {
+        "border_finger_recall": 1.0,
+        "printed_hand_kept": 1.0,
+        "skin_chroma_at_detect": 120.0,
+        "halo": 0.0,
+        "composite": 1.0
+      },
+      "geo_ill_finger": {
+        "border_finger_recall": 0.9643,
+        "printed_hand_kept": 1.0,
+        "skin_chroma_at_detect": 46.0793,
+        "halo": 0.0203,
+        "composite": 0.8007
+      },
+      "winner": "geo\u2192finger\u2192ill"
+    },
+    "printed_hand": {
+      "geo_finger_ill": {
+        "border_finger_recall": 1.0,
+        "printed_hand_kept": 1.0,
+        "skin_chroma_at_detect": 120.0,
+        "halo": 0.0,
+        "composite": 1.0
+      },
+      "geo_ill_finger": {
+        "border_finger_recall": 0.9643,
+        "printed_hand_kept": 1.0,
+        "skin_chroma_at_detect": 46.0793,
+        "halo": 0.0203,
+        "composite": 0.8007
+      },
+      "winner": "geo\u2192finger\u2192ill"
+    }
+  },
+  "recommendation": {
+    "crop": "bbox_margin",
+    "stages": "geo\u2192finger\u2192ill",
+    "architecture_change": false
+  }
+}

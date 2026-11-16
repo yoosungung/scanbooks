@@ -69,14 +69,14 @@ flowchart LR
 
 ### 3.1 crop 계약
 
-- **기본:** 쿼드 코너의 axis-aligned bounding box에 **마진**(작업 긴 변 대비 비율, `engine`이 상수 확정)을 둔 crop. 엄격한 4점 호모그래피 평면 투영을 기본 경로로 쓰지 않는다.
+- **기본:** 쿼드 코너의 axis-aligned bounding box에 **마진**(`CROP_MARGIN_RATIO = 0.05`, 이미지 긴 변 대비; `engine/contracts.py`)을 둔 crop. 엄격한 4점 호모그래피 평면 투영을 기본 경로로 쓰지 않는다.
 - **이유:** 휘어진 책 페이지는 코너를 잇는 직선 밖에 곡률이 튀어나오며, 호모그래피 선적용은 내용 절단과 GeoTr 학습 분포 이탈을 만든다.
 - **UI:** 프리뷰 쿼드 오버레이는 유지한다. Quad는 BBox·마진 계산 입력이다.
-- **M1 검증:** 동일 골든 세트에서 `BBox+margin` vs `Quad homography` 후 GeoTr 품질을 비교하고, 기본 경로는 BBox로 둔다.
+- **M1 검증(완료):** 골든 `curved_book`에서 BBox+margin content retention > quad-polygon(homography ROI). 기본 경로 **BBox 유지** — 결과 `engine/benches/experiment_matrix.md`.
 
 ### 3.2 단계 의존
 
-`finger`는 `geo` 직후(자연 피부색·그림자 보존). `ill`은 `finger` inpaint 이후(인페인팅 경계 밝기 차이를 IllTr이 완화). M1에서 `ill → finger` 대비 실험은 ROADMAP 매트릭스에 포함하되 앱 기본 계약은 바꾸지 않는다.
+`finger`는 `geo` 직후(자연 피부색·그림자 보존). `ill`은 `finger` inpaint 이후(인페인팅 경계 밝기 차이를 IllTr이 완화). M1 매트릭스(`thumb_occlusion`/`printed_hand`)에서 `geo→ill→finger`는 detect-시점 피부 chroma 하락·composite 열세 — 앱 기본 **`geo→finger→ill` 유지** (`engine/benches/experiment_matrix.md`).
 
 ## 4. 도메인 스키마
 

@@ -89,13 +89,13 @@ GeoTr에 work 해상도 텐서를 넣지 않는다.
 
 ## 실험 매트릭스 (M1)
 
-| ID | 변수 | 기록 |
-|---|---|---|
-| C1 | BBox+margin vs Quad homography → geo | 절단·왜곡·육안/SSIM |
-| S1 | `geo→finger→ill` vs `geo→ill→finger` | 피부 탈색·halo·inpaint 얼룩 |
-| I1 | IllTr batch vs 순차 패치 | latency·스티칭 품질 |
+| ID | 변수 | 기록 | 결과 |
+|---|---|---|---|
+| C1 | BBox+margin vs Quad homography → geo | content retention | **BBox 유지** |
+| S1 | `geo→finger→ill` vs `geo→ill→finger` | chroma·recall·composite | **finger→ill 유지** |
+| I1 | IllTr batch vs 순차 패치 | latency·스티칭 품질 | (후속 티켓) |
 
-계약 기본은 C1=BBox, S1=`geo→finger→ill`. 결과가 다르면 ARCHITECTURE를 개정한 뒤에만 앱 순서를 바꾼다.
+상세: [benches/experiment_matrix.md](benches/experiment_matrix.md). 골든: `tests/fixtures/golden/`. 계약 기본 유지(ARCHITECTURE 미개정).
 
 ## Commands
 
@@ -104,8 +104,9 @@ cd engine
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e '.[doctr,dev]'
 pytest
+scanbooks-experiment-matrix
 # optional re-measure (needs DocTr checkout + weights + CPU device patches):
 # DOCTR_ROOT=/path/to/DocTr scanbooks-export-doctr
 ```
 
-Export 측정 결과: [benches/export_prototype.md](benches/export_prototype.md).
+Export: [benches/export_prototype.md](benches/export_prototype.md). 매트릭스: [benches/experiment_matrix.md](benches/experiment_matrix.md).

@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "description": "Synthetic M1 golden set: curved_book / thumb_occlusion / printed_hand",
+  "cases": {
+    "curved_book": {
+      "quad": {
+        "tl": {
+          "x": 0.18,
+          "y": 0.12
+        },
+        "tr": {
+          "x": 0.82,
+          "y": 0.14
+        },
+        "br": {
+          "x": 0.84,
+          "y": 0.88
+        },
+        "bl": {
+          "x": 0.16,
+          "y": 0.86
+        }
+      },
+      "size": [
+        256,
+        256
+      ]
+    },
+    "thumb_occlusion": {
+      "quad": {
+        "tl": {
+          "x": 0.18,
+          "y": 0.12
+        },
+        "tr": {
+          "x": 0.82,
+          "y": 0.14
+        },
+        "br": {
+          "x": 0.84,
+          "y": 0.88
+        },
+        "bl": {
+          "x": 0.16,
+          "y": 0.86
+        }
+      },
+      "size": [
+        256,
+        256
+      ]
+    },
+    "printed_hand": {
+      "quad": {
+        "tl": {
+          "x": 0.18,
+          "y": 0.12
+        },
+        "tr": {
+          "x": 0.82,
+          "y": 0.14
+        },
+        "br": {
+          "x": 0.84,
+          "y": 0.88
+        },
+        "bl": {
+          "x": 0.16,
+          "y": 0.86
+        }
+      },
+      "size": [
+        256,
+        256
+      ]
+    }
+  },
+  "note": "Deterministic synthetics for crop/order matrix; replace with device captures later."
+}

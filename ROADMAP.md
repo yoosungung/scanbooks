@@ -22,7 +22,7 @@ factory `pm-roadmap-sync`는 `##` 아래 **`- [ ]` / `- [x]`** 만 enqueue한다
 착수 순서(이 순서를 지킨다):
 
 - [x] **Export 프로토타입 먼저:** DocTr 체크포인트에서 실제 I/O 텐서(`288×288` GeoTr, `128×128` IllTr 패치), 파라미터 수·FP16 용량, ORT 연산자(GridSample/LayerNorm/Reshape) 호환성을 측정하고 ARCHITECTURE §5 숫자를 확정·필요 시 미세 수정. — 증거: `engine/benches/export_prototype.md` (합 FP16 75.89 MB; GridSample은 후처리)
-- [ ] **파이프라인 실험 매트릭스:** 골든 세트(곡률 큰 책 / 엄지 가림 / 본문 인물·손 사진)에 대해 ① BBox+margin crop vs Quad homography → GeoTr, ② `geo→finger→ill`(계약 기본) vs `geo→ill→finger` 품질 비교 후 기본 경로를 문서에 재확인.
+- [x] **파이프라인 실험 매트릭스:** 골든 세트(곡률 큰 책 / 엄지 가림 / 본문 인물·손 사진)에 대해 ① BBox+margin crop vs Quad homography → GeoTr, ② `geo→finger→ill`(계약 기본) vs `geo→ill→finger` 품질 비교 후 기본 경로를 문서에 재확인. — 증거: `engine/benches/experiment_matrix.md` (BBox·`geo→finger→ill` 유지)
 - [ ] **파리티 픽스처:** `engine/tests/fixtures/`에 전처리 텐서 + `raw_flow→warped` + `raw_mask→inpainted` 기준 출력 포함.
 - [ ] ONNX 최적화·양자화 후보(weight-only INT8 / dynamic; **static INT8 기본 금지**).
 - [ ] FingerSeg 후보 + 외곽 CC 필터 + Telea/NS.
@@ -95,7 +95,7 @@ factory `pm-roadmap-sync`는 `##` 아래 **`- [ ]` / `- [x]`** 만 enqueue한다
 
 ## 다음 액션
 
-1. M1: 실험 매트릭스 + 파리티 픽스처 (export 프로토타입 완료)
+1. M1: 파리티 픽스처 (`engine/tests/fixtures/` 전처리·flow·mask 기준 출력)
 2. IllTr export forward 단순화(노드 폭발 완화) → 양자화 후보
 3. EP·latency 벤치 후 게이트 판정
 4. 상업화 시 라이선스 문의 병행
