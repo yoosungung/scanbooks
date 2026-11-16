@@ -23,7 +23,7 @@ ios/
     App/                   # ScanbooksApp, RootView
     Camera/                # preview, Vision+rough quad, photo shutter
     Storage/               # SessionStore — sessions/{id}/pages/{pageId}/
-    Process/               # StubProcessRunner + stage list UI
+    Process/               # PipelineStub + StubProcessRunner + stage list UI
     Session/               # grid + PDF CTA stub
     Models/                # AppRoute, PipelineStage, ScanSession, Page, Quad, …
   ScanbooksTests/

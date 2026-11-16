@@ -24,7 +24,7 @@ android/
       camera/          # RoughQuadDetector, EdgeStabilityTracker, YuvToGray, CameraCaptureHolder
       storage/         # SessionStore — sessions/{id}/pages/{pageId}/
       model/           # AppRoute, PipelineStage, ScanSession, Page, Quad, …
-      process/         # StubProcessRunner
+      process/         # PipelineStub + StubProcessRunner
       ui/camera|process|session/
       MainActivity.kt
     src/test/
