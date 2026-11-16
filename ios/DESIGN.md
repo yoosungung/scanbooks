@@ -47,7 +47,7 @@ ios/
 
 ## 파리티
 
-- `CvBridge.remap` vs `*_warped.png` (`remap_max_abs ≤ 3/255`, align_corners)
+- `CvBridge.remap` vs warped fixture (`remap_max_abs ≤ 3/255`, align_corners, INTER_LINEAR + BORDER_CONSTANT(0))
 - `CvBridge.inpaintTelea` 시그니처·픽스처 훅; Telea 본체는 OpenCV(M3), 동일 테스트가 `inpaint_atol ≤ 1/255`로 잠금
 - 픽스처: `ScanbooksTests/Fixtures/parity/` (`.rgb`/`.gray`/`.f32` + manifest; engine parity에서 발행)
 - 단위 테스트: `ParityRemapInpaintHookTests`
