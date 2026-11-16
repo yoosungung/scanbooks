@@ -1,0 +1,82 @@
+{
+  "ticket": "0be42506-ebb3-4175-909c-3eb656a3307e",
+  "policy": {
+    "static_int8": "forbidden_default"
+  },
+  "allowed_candidates": [
+    "weight_only_int8",
+    "dynamic_int8",
+    "mixed_exclude_flow_head"
+  ],
+  "tooling": {
+    "dynamic": "onnxruntime.quantization.quantize_dynamic (QInt8, per_channel)",
+    "weight_only": "MatMulNBitsQuantizer bits=8 block_size=128 symmetric QOperator",
+    "ort": "CPUExecutionProvider smoke; EP latency \u2192 later benches/latency.md"
+  },
+  "models": {
+    "geotr": {
+      "fp32_mb": 86.42,
+      "dynamic_int8": {
+        "mb": 23.49,
+        "max_abs": 0.0037404298782348633,
+        "mean_abs": 0.000526959600392729,
+        "load_run_s": 0.26
+      },
+      "weight_only_int8": {
+        "mb": 37.45,
+        "max_abs": 0.0004938244819641113,
+        "mean_abs": 0.00012161299673607573,
+        "load_run_s": 0.25
+      },
+      "status": "ok"
+    },
+    "illtr": {
+      "fp32_mb": 66.29,
+      "dynamic_int8": {
+        "mb": 42.32,
+        "max_abs": 0.009683221578598022,
+        "mean_abs": 0.0016955056926235557,
+        "load_run_s": 3.63
+      },
+      "weight_only_int8": {
+        "mb": 35.13,
+        "max_abs": 0.0062674880027771,
+        "mean_abs": 0.0010416271397843957,
+        "load_run_s": 3.76
+      },
+      "status": "ok"
+    },
+    "seg": {
+      "fp32_mb": 4.39,
+      "dynamic_int8": {
+        "mb": 1.39,
+        "max_abs": 0.9737850427627563,
+        "mean_abs": 0.07751336693763733,
+        "load_run_s": 0.08
+      },
+      "weight_only_int8": {
+        "mb": 4.39,
+        "max_abs": 0.0,
+        "mean_abs": 0.0,
+        "load_run_s": 0.09,
+        "note": "MatMulNBits no-op \u2014 U2NETP is Conv-heavy"
+      },
+      "status": "ok"
+    }
+  },
+  "recommendation": {
+    "geotr": "either",
+    "geotr_note": "dynamic ~3.7\u00d7 smaller (23.5 vs 86.4 MB) with max_abs\u22480.004; weight-only tighter error (\u22485e-4) at 37.5 MB \u2014 pick after latency.md",
+    "illtr": "weight_only_int8",
+    "illtr_note": "WO smaller+lower error than dynamic; still blocked by huge export graph",
+    "seg": "keep_fp16_or_fp32",
+    "seg_note": "WO no-op (Conv); dynamic shrinks but sigmoid max_abs\u22480.97 \u2014 not default",
+    "static_int8": "do_not_adopt_as_default",
+    "mixed_exclude_flow_head": "candidate_if_flow_head_degrades \u2014 not measured this ticket"
+  },
+  "notes": {
+    "illtr_graph": "IllTr naive ONNX still ~123k nodes (export_prototype); quantize size OK but load time dominates \u2014 simplify IllTr forward before app integration",
+    "static_risk": "static INT8 calibrates activations offline; GeoTr flow regression / Transformer sensitivity \u2192 ARCHITECTURE forbids as default",
+    "fp16": "weight-only FP16 already measured (sum geo+ill+seg 75.89 MB) \u2014 keep as baseline"
+  }
+}

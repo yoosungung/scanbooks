@@ -11,6 +11,7 @@ requires-python = ">=3.11"
 dependencies = [
   "numpy",
   "onnx",
+  "onnx_ir",
   "onnxruntime",
   "opencv-python-headless",
   "torch",
@@ -23,6 +24,7 @@ dev = ["pytest"]
 [project.scripts]
 scanbooks-export-doctr = "scanbooks_engine.export_doctr:main"
 scanbooks-experiment-matrix = "scanbooks_engine.experiment_matrix:main"
+scanbooks-quantize-candidates = "scanbooks_engine.quantize:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -38,5 +38,5 @@ This file provides guidance to AI coding assistants (Claude Code, Codex, Gemini,
  
 ## 3. Status
 
-M0 문서 확정. M1 export·실험 매트릭스·파리티 픽스처 완료(`engine/tests/fixtures/parity/`). 다음: ONNX 양자화 후보.
+M0 문서 확정. M1 export·실험 매트릭스·파리티·ONNX 양자화 후보 완료(`engine/benches/quantize_candidates.md`). 다음: FingerSeg 후보 + EP latency.
 
