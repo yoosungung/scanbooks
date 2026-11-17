@@ -57,8 +57,8 @@ factory `pm-roadmap-sync`는 `##` 아래 **`- [ ]` / `- [x]`** 만 enqueue한다
 
 ## M3 — 엔진 연동
 
-- [ ] ORT Mobile로 `geo → finger → ill` 연동(선택한 EP)
-- [ ] 페이지별 진행 UI, `PageMetrics`(`workLongEdge`, `geoNetSize`, `ortEp` 포함)
+- [x] ORT Mobile로 `geo → finger → ill` 연동(선택한 EP) — 증거: PR #15 (`caa47a9`)
+- [x] 페이지별 진행 UI, `PageMetrics`(`workLongEdge`, `geoNetSize`, `ortEp` 포함) — 증거: PR #16 (`PageMetricsPresentation` + Process 단계 ms/계약 라인)
 - [ ] `failed` + 실패 단계부터 재시도
 - [ ] 실기기 스모크(중급기 1대 이상/플랫폼)
 

@@ -26,8 +26,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import net.askwho.scanbooks.model.PageMetrics
 import net.askwho.scanbooks.model.PipelineStage
 import net.askwho.scanbooks.process.OrtBackendFactory
 import net.askwho.scanbooks.storage.SessionStore
@@ -41,13 +44,18 @@ fun ProcessStubScreen(
     onCancel: () -> Unit,
 ) {
     var current by remember { mutableStateOf(PipelineStage.CROP) }
+    var metrics by remember { mutableStateOf<PageMetrics?>(null) }
     val runner = remember { OrtBackendFactory.makeRunner() }
 
     LaunchedEffect(sessionId, pageId) {
         try {
-            runner.run(store, sessionId, pageId) { stage -> current = stage }
+            runner.run(store, sessionId, pageId) { stage ->
+                current = stage
+                metrics = runCatching { store.loadPage(sessionId, pageId).metrics }.getOrNull()
+            }
         } catch (_: Exception) {
             // failed already persisted; stay on Process for cancel
+            metrics = runCatching { store.loadPage(sessionId, pageId).metrics }.getOrNull()
         }
         if (current == PipelineStage.DONE) {
             delay(400)
@@ -96,7 +104,34 @@ fun ProcessStubScreen(
                     StatusIcon(stage = stage, current = current)
                     Spacer(modifier = Modifier.padding(horizontal = 8.dp))
                     Text(text = stage.koreanLabel, color = Color.White)
+                    Spacer(modifier = Modifier.weight(1f))
+                    stageMs(stage, metrics)?.let { ms ->
+                        Text(
+                            text = "${ms}ms",
+                            color = Color.White.copy(alpha = 0.55f),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = FontFamily.Monospace,
+                        )
+                    }
                 }
+            }
+        }
+
+        metrics?.let { m ->
+            PageMetricsPresentation.contractLine(m)?.let { contract ->
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = contract,
+                    color = Color.White.copy(alpha = 0.65f),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = FontFamily.Monospace,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .widthIn(max = 320.dp)
+                        .semantics {
+                            contentDescription = PageMetricsPresentation.accessibilitySummary(m)
+                        },
+                )
             }
         }
 
@@ -145,3 +180,12 @@ private fun statusText(stage: PipelineStage, current: PipelineStage): String {
         else -> "대기"
     }
 }
+
+private fun stageMs(stage: PipelineStage, metrics: PageMetrics?): Int? =
+    when (stage) {
+        PipelineStage.CROP -> metrics?.cropMs
+        PipelineStage.GEO -> metrics?.geoMs
+        PipelineStage.FINGER -> metrics?.fingerMs
+        PipelineStage.ILL -> metrics?.illMs
+        else -> null
+    }

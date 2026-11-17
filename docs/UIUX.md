@@ -120,6 +120,8 @@ sequenceDiagram
 | 썸네일 | `originalUri` 또는 crop 중간본 |
 | 단계 리스트 | `자르기` → `곡면 펴기` → `손가락 지우기` → `조명 보정` |
 | 현재 단계 | 강조 + 스피너. `PipelineStage`와 1:1 매핑(영문 enum, 한글 라벨) |
+| 단계 latency | 완료된 단계 우측에 `Nms` (PageMetrics `cropMs`/`geoMs`/`fingerMs`/`illMs`) |
+| 계약 메타 | 하단에 `workLongEdge` · `geoNet` · `EP`(ortEp) 한 줄 — 디버그/검증용, 카드·통계 스트립 금지 |
 | 예상 시간 | 중급기 게이트 합(대략 수 초~십수 초) — “보통 10초 안팎” 정적 카피 허용 |
 | 취소 | 현재 페이지만 `failed`/`취소됨`, 세션은 유지 |
 | 백그라운드 | 홈으로 나가도 작업 유지(플랫폼 백그라운드 제약 내). 불가 시 명시: `앱을 열어 둔 채 기다려 주세요` |

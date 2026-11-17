@@ -8,6 +8,7 @@ struct ProcessStubView: View {
     let onCancel: () -> Void
 
     @State private var current: PipelineStage = .crop
+    @State private var metrics: PageMetrics?
     @State private var runner = OrtBackendFactory.makeRunner()
 
     var body: some View {
@@ -28,6 +29,11 @@ struct ProcessStubView: View {
                             Text(stage.koreanLabel)
                                 .foregroundStyle(.white)
                             Spacer()
+                            if let ms = stageMs(stage) {
+                                Text("\(ms)ms")
+                                    .font(.caption.monospacedDigit())
+                                    .foregroundStyle(.white.opacity(0.55))
+                            }
                         }
                         .accessibilityLabel("\(stage.koreanLabel) \(statusText(for: stage))")
                     }
@@ -35,6 +41,15 @@ struct ProcessStubView: View {
                 .padding(20)
                 .frame(maxWidth: 320)
                 .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+
+                if let metrics, let contract = PageMetricsPresentation.contractLine(metrics) {
+                    Text(contract)
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.white.opacity(0.65))
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: 320)
+                        .accessibilityLabel(PageMetricsPresentation.accessibilitySummary(metrics))
+                }
 
                 if current == .done {
                     Text("펴진 페이지가 준비됐어요")
@@ -50,12 +65,24 @@ struct ProcessStubView: View {
         .onAppear {
             runner.run(store: store, sessionId: sessionId, pageId: pageId) { stage in
                 current = stage
+                metrics = (try? store.loadPage(sessionId: sessionId, pageId: pageId))?.metrics
                 if stage == .done {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                         onFinished()
                     }
                 }
             }
+        }
+    }
+
+    private func stageMs(_ stage: PipelineStage) -> Int? {
+        guard let metrics else { return nil }
+        switch stage {
+        case .crop: return metrics.cropMs
+        case .geo: return metrics.geoMs
+        case .finger: return metrics.fingerMs
+        case .ill: return metrics.illMs
+        default: return nil
         }
     }
 
