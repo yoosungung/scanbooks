@@ -60,7 +60,7 @@ factory `pm-roadmap-sync`는 `##` 아래 **`- [ ]` / `- [x]`** 만 enqueue한다
 - [x] ORT Mobile로 `geo → finger → ill` 연동(선택한 EP) — 증거: PR #15 (`caa47a9`)
 - [x] 페이지별 진행 UI, `PageMetrics`(`workLongEdge`, `geoNetSize`, `ortEp` 포함) — 증거: PR #16 (`PageMetricsPresentation` + Process 단계 ms/계약 라인)
 - [x] `failed` + 실패 단계부터 재시도 — 증거: PR #17 (`FailedRetryPresentation` + `PipelineRunner` failedStage resume)
-- [x] 실기기 스모크(중급기 1대 이상/플랫폼) — **임시 증거(option 2, eric 2026-11-17):** iOS Simulator `iPhone 17` + Android AVD `Pixel_API_36` 환경에서 fixture 3장 → `done`+PDF (`DeviceSmokeTempEvidenceTests` / `DeviceSmokeTempEvidenceTest`). 물리 중급기 USB는 후속 게이트. drift: sim/emu temporary evidence.
+- [x] 실기기 스모크(중급기 1대 이상/플랫폼) — **임시 증거(option 2, eric 2026-11-17):** iOS Simulator `iPhone 17` fixture 3장 → `done`+PDF (`DeviceSmokeTempEvidenceTests`); Android host JVM `DeviceSmokeTempEvidenceTest`(동일) + AVD `Pixel_API_36` 존재(이번 런 adb boot hang). 물리 중급기 USB는 후속 게이트. drift: sim/emu temporary evidence.
 
 **완료 기준:** 책 페이지 실촬영 3장 이상에서 `done` 및 PDF 생성. (위 임시 증거로 M3 게이트 통과; 물리 실촬영은 후속.)
 
