@@ -113,13 +113,14 @@ final class PipelineRunnerTests: XCTestCase {
             // expected
         }
         var visited: [PipelineStage] = []
+        // ARCHITECTURE §1.3 — default startFrom; runner resumes at persisted failedStage.
         let result = try await runner.runAsync(
             store: store,
             sessionId: session.id,
-            pageId: page.id,
-            startFrom: .geo
+            pageId: page.id
         ) { visited.append($0) }
         XCTAssertEqual(visited.first, .geo)
+        XCTAssertFalse(visited.contains(.crop))
         XCTAssertEqual(result.last, .done)
         let done = try store.loadPage(sessionId: session.id, pageId: page.id)
         XCTAssertEqual(done.status, .done)

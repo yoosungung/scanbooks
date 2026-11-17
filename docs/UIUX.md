@@ -123,6 +123,7 @@ sequenceDiagram
 | 단계 latency | 완료된 단계 우측에 `Nms` (PageMetrics `cropMs`/`geoMs`/`fingerMs`/`illMs`) |
 | 계약 메타 | 하단에 `workLongEdge` · `geoNet` · `EP`(ortEp) 한 줄 — 디버그/검증용, 카드·통계 스트립 금지 |
 | 예상 시간 | 중급기 게이트 합(대략 수 초~십수 초) — “보통 10초 안팎” 정적 카피 허용 |
+| 실패 | 에러 한 줄(`FailedRetryPresentation`) + `이 단계부터 재시도` — `failedStage`부터 재개 |
 | 취소 | 현재 페이지만 `failed`/`취소됨`, 세션은 유지 |
 | 백그라운드 | 홈으로 나가도 작업 유지(플랫폼 백그라운드 제약 내). 불가 시 명시: `앱을 열어 둔 채 기다려 주세요` |
 
