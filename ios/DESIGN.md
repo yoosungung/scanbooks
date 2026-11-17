@@ -7,8 +7,8 @@ iOS 네이티브 앱 내부 설계. 계약·스키마는 [ARCHITECTURE.md](../AR
 - SwiftUI 셸, AVFoundation 카메라 프리뷰
 - 실시간 문서 테두리(Vision 우선, 부족 시 Rough luminance blob)
 - 로컬 `ScanSession` / `Page` 저장 (`Storage/SessionStore`)
-- ONNX Runtime Mobile로 네트워크 추론 (후속)
-- **flow remap** (`CvBridge.remap`, align_corners) · Telea/NS inpaint는 OpenCV 연동 시 동일 훅으로 잠금 (M3)
+- ONNX Runtime Mobile 연동 골격 (`PipelineRunner` + `OrtBackendFactory`; `.onnx` 없으면 passthrough)
+- **flow remap** (`CvBridge.remap`, align_corners) · Telea/NS inpaint는 OpenCV 연동 시 동일 훅으로 잠금 (후속)
 - PDFKit export (`Export/PdfExporter` → `export.pdf` / `exportPdfUri`)
 
 모델 학습·ONNX 변환은 `engine/` 몫이다.
@@ -23,7 +23,7 @@ ios/
     App/                   # ScanbooksApp, RootView
     Camera/                # preview, Vision+rough quad, photo shutter
     Storage/               # SessionStore — sessions/{id}/pages/{pageId}/
-    Process/               # PipelineStub + StubProcessRunner + stage list UI
+    Process/               # PipelineRunner + OrtBackendFactory + PipelineStub(legacy) + stage UI
     Session/               # grid + PDF CTA
     Export/                # PdfExporter (cleanedUri → PDFKit)
     CvBridge/              # remap (pure Swift) + inpaintTelea 훅(OpenCV pending)
@@ -34,9 +34,12 @@ ios/
 ## 파이프라인 러너
 
 - 순서: `crop → geo → finger → ill → done` ([ARCHITECTURE §1.3](../ARCHITECTURE.md))
-- M2: `PipelineStub`가 단계 UI + `Page.status` 디스크 반영; `done` 시 stub `cleaned.png` (ORT/OpenCV 없음)
-- `StubProcessRunner`는 순수 UI/단위 테스트용 잔존
+- M3: `PipelineRunner`가 BBox crop → 단계 PNG(`cropped`/`dewarped`/`finger`/`cleaned`) + `PageMetrics`(`workLongEdge`/`geoNetSize`/`ortEp`) 기록
+- `StageBackend` 주입: 실기기 `.onnx` 있으면 ORT 백엔드, 없으면 passthrough(선택 EP 메타 유지). 실패 시 `failed`+`failedStage`+`errorCode`, `startFrom`/`failedStage`로 재시도
+- 선택 EP: `CoreML_MLProgram_NeuralEngine+CPU_fallback` (`engine/benches/latency.md`)
+- `PipelineStub` / `StubProcessRunner`는 레거시·단위 테스트용 잔존
 - 프리뷰: Dewarp 없음 ([ARCHITECTURE §1.4](../ARCHITECTURE.md))
+- 모델 메타: [models/manifest.json](../models/manifest.json)
 
 ## 저장
 

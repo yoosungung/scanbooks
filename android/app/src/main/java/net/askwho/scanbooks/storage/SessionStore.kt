@@ -3,6 +3,7 @@ package net.askwho.scanbooks.storage
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import net.askwho.scanbooks.model.Page
+import net.askwho.scanbooks.model.PageMetrics
 import net.askwho.scanbooks.model.PipelineStage
 import net.askwho.scanbooks.model.Quad
 import net.askwho.scanbooks.model.ScanSession
@@ -74,6 +75,26 @@ class SessionStore(filesDir: File) {
         persist(loadPage(sessionId, pageId).copy(status = status))
     }
 
+    /** Persist a full [Page] snapshot (URIs, metrics, status, errorCode). */
+    fun savePage(page: Page) {
+        persist(page)
+    }
+
+    /** Writes a lossless PNG under `pages/{pageId}/` and returns the relative URI. */
+    fun writePagePng(sessionId: String, pageId: String, fileName: String, data: ByteArray): String {
+        require(isPng(data)) { "artifact must be PNG" }
+        val dir = pageDirectory(sessionId, pageId)
+        dir.mkdirs()
+        File(dir, fileName).writeBytes(data)
+        return "pages/$pageId/$fileName"
+    }
+
+    fun readPageFile(sessionId: String, pageId: String, fileName: String): ByteArray {
+        val file = File(pageDirectory(sessionId, pageId), fileName)
+        require(file.exists()) { "missing $fileName for $pageId" }
+        return file.readBytes()
+    }
+
     /** M2 stub: copy `working.png` → `cleaned.png` and set `cleanedUri` (ARCHITECTURE §6 PDF source). */
     fun finalizeStubCleaned(sessionId: String, pageId: String) {
         val dir = pageDirectory(sessionId, pageId)
@@ -142,7 +163,9 @@ class SessionStore(filesDir: File) {
             .put("cleanedUri", page.cleanedUri ?: JSONObject.NULL)
             .put("status", page.status.raw)
             .put("errorCode", page.errorCode ?: JSONObject.NULL)
+            .put("failedStage", page.failedStage?.raw ?: JSONObject.NULL)
         if (page.quad != null) obj.put("quad", encodeQuad(page.quad)) else obj.put("quad", JSONObject.NULL)
+        if (page.metrics != null) obj.put("metrics", encodeMetrics(page.metrics)) else obj.put("metrics", JSONObject.NULL)
         File(pageDirectory(page.sessionId, page.id), "page.json").writeText(obj.toString(2))
     }
 
@@ -169,8 +192,42 @@ class SessionStore(filesDir: File) {
             cleanedUri = obj.optStringOrNull("cleanedUri"),
             status = status,
             quad = obj.optJSONObject("quad")?.let { decodeQuad(it) },
+            metrics = obj.optJSONObject("metrics")?.let { decodeMetrics(it) },
             errorCode = obj.optStringOrNull("errorCode"),
+            failedStage = obj.optStringOrNull("failedStage")?.let { raw ->
+                PipelineStage.entries.firstOrNull { it.raw == raw }
+            },
         )
+    }
+
+    private fun encodeMetrics(m: PageMetrics): JSONObject =
+        JSONObject()
+            .put("cropMs", m.cropMs ?: JSONObject.NULL)
+            .put("geoMs", m.geoMs ?: JSONObject.NULL)
+            .put("fingerMs", m.fingerMs ?: JSONObject.NULL)
+            .put("illMs", m.illMs ?: JSONObject.NULL)
+            .put("workLongEdge", m.workLongEdge ?: JSONObject.NULL)
+            .put("geoNetSize", m.geoNetSize ?: JSONObject.NULL)
+            .put("illPatchSize", m.illPatchSize ?: JSONObject.NULL)
+            .put("modelVersion", m.modelVersion ?: JSONObject.NULL)
+            .put("ortEp", m.ortEp ?: JSONObject.NULL)
+
+    private fun decodeMetrics(obj: JSONObject): PageMetrics =
+        PageMetrics(
+            cropMs = obj.optIntOrNull("cropMs"),
+            geoMs = obj.optIntOrNull("geoMs"),
+            fingerMs = obj.optIntOrNull("fingerMs"),
+            illMs = obj.optIntOrNull("illMs"),
+            workLongEdge = obj.optIntOrNull("workLongEdge"),
+            geoNetSize = obj.optIntOrNull("geoNetSize"),
+            illPatchSize = obj.optIntOrNull("illPatchSize"),
+            modelVersion = obj.optStringOrNull("modelVersion"),
+            ortEp = obj.optStringOrNull("ortEp"),
+        )
+
+    private fun JSONObject.optIntOrNull(key: String): Int? {
+        if (!has(key) || isNull(key)) return null
+        return getInt(key)
     }
 
     private fun encodeQuad(q: Quad): JSONObject =

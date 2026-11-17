@@ -13,6 +13,8 @@ struct Page: Equatable, Sendable, Codable {
     var quad: Quad?
     var metrics: PageMetrics?
     var errorCode: String?
+    /// ARCHITECTURE §3 — stage that failed; retry resumes here.
+    var failedStage: PipelineStage?
 }
 
 /// ARCHITECTURE §4.4 — stored when pipeline fills metrics (M3+).

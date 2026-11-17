@@ -5,11 +5,11 @@ import net.askwho.scanbooks.model.PipelineStage
 import net.askwho.scanbooks.storage.SessionStore
 
 /**
- * M2 pipeline stub: `crop→geo→finger→ill→done` with [Page.status] persistence.
- * No ORT / OpenCV (ARCHITECTURE M3). UI labels: docs/UIUX.md §4.2.
+ * Compatibility façade — M3 delegates to [PipelineRunner] (selected EP + stage backends).
  */
 class PipelineStub(
     private val stepDelayMs: Long = 350L,
+    private val runner: PipelineRunner = OrtBackendFactory.makeRunner(),
 ) {
     suspend fun run(
         store: SessionStore,
@@ -17,18 +17,8 @@ class PipelineStub(
         pageId: String,
         onUpdate: (PipelineStage) -> Unit,
     ): List<PipelineStage> {
-        val visited = mutableListOf<PipelineStage>()
-        val stages = PipelineStage.processingOrder + PipelineStage.DONE
-        for (stage in stages) {
-            if (stage == PipelineStage.DONE) {
-                store.finalizeStubCleaned(sessionId, pageId)
-            } else {
-                store.updatePageStatus(sessionId, pageId, stage)
-            }
-            visited += stage
-            onUpdate(stage)
-            if (stage != PipelineStage.DONE && stepDelayMs > 0) delay(stepDelayMs)
-        }
+        val visited = runner.run(store, sessionId, pageId, onUpdate = onUpdate)
+        if (stepDelayMs > 0) delay(stepDelayMs)
         return visited
     }
 }

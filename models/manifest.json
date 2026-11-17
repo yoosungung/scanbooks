@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "note": "ONNX binaries are not committed (ARCHITECTURE §1.10). Place Release/LFS artifacts next to this manifest or under app bundle Models/.",
+  "defaultEp": {
+    "ios": "CoreML_MLProgram_NeuralEngine+CPU_fallback",
+    "android": "CPUExecutionProvider"
+  },
+  "models": {
+    "geotr": {
+      "file": "geotr.onnx",
+      "netSize": 288,
+      "quant": "dynamic_int8",
+      "checksumSha256": null
+    },
+    "seg": {
+      "file": "seg.onnx",
+      "netSize": 288,
+      "quant": "fp16_or_fp32",
+      "checksumSha256": null
+    },
+    "fingerseg": {
+      "file": "fingerseg.onnx",
+      "status": "candidate_a_pending_weights",
+      "checksumSha256": null
+    },
+    "illtr": {
+      "file": "illtr.onnx",
+      "patchSize": 128,
+      "overlap": 0.125,
+      "status": "blocked_on_export_simplify",
+      "checksumSha256": null
+    }
+  },
+  "modelVersion": "doctr-geotr-fp16-v1+fingerseg-pending+illtr-pending"
+}

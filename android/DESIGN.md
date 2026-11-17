@@ -7,8 +7,8 @@ Android 네이티브 앱 내부 설계. 계약·스키마는 [ARCHITECTURE.md](.
 - Jetpack Compose UI, CameraX 프리뷰
 - 실시간 문서 테두리(Rough luminance blob + 안정화; ML Kit 후속 가능)
 - 로컬 `ScanSession` / `Page` 저장 (`storage/SessionStore`)
-- ONNX Runtime Mobile로 네트워크 추론 (후속)
-- **flow remap** (`CvBridge.remap`, align_corners) · Telea/NS inpaint는 OpenCV 연동 시 동일 훅으로 잠금 (M3)
+- ONNX Runtime Mobile 연동 골격 (`PipelineRunner` + `OrtBackendFactory`; `.onnx` 없으면 passthrough)
+- **flow remap** (`CvBridge.remap`, align_corners) · Telea/NS inpaint는 OpenCV 연동 시 동일 훅으로 잠금 (후속)
 - `PdfDocument` export (`export/PdfExporter` ← `cleanedUri`; Session CTA)
 
 모델 학습·ONNX 변환은 `engine/` 몫이다.
@@ -24,7 +24,7 @@ android/
       camera/          # RoughQuadDetector, EdgeStabilityTracker, YuvToGray, CameraCaptureHolder
       storage/         # SessionStore — sessions/{id}/pages/{pageId}/
       model/           # AppRoute, PipelineStage, ScanSession, Page, Quad, …
-      process/         # PipelineStub + StubProcessRunner
+      process/         # PipelineRunner + OrtBackendFactory + PipelineStub(legacy)
       export/          # PdfExporter (cleanedUri → PdfDocument)
       cvbridge/        # remap (pure Kotlin) + inpaintTelea 훅(OpenCV pending)
       ui/camera|process|session/
@@ -35,9 +35,12 @@ android/
 ## 파이프라인 러너
 
 - 순서: `crop → geo → finger → ill → done`
-- M2: `PipelineStub` 코루틴 단계 UI + `Page.status` 디스크 반영; `done` 시 stub `cleaned.png` (ORT/OpenCV 없음)
-- `StubProcessRunner`는 순수 단위 테스트용 잔존
+- M3: `PipelineRunner`가 BBox crop → 단계 PNG + `PageMetrics`(`workLongEdge`/`geoNetSize`/`ortEp`) 기록
+- `StageBackend` 주입: `.onnx` 있으면 ORT 백엔드, 없으면 passthrough. 실패 시 `failed`+`failedStage`+`errorCode`, `startFrom` 재시도
+- 선택 EP: `CPUExecutionProvider` (NNAPI deferred — `engine/benches/latency.md`)
+- `PipelineStub` / `StubProcessRunner`는 레거시·단위 테스트용 잔존
 - 프리뷰: Dewarp 없음
+- 모델 메타: [models/manifest.json](../models/manifest.json)
 
 ## 저장
 
