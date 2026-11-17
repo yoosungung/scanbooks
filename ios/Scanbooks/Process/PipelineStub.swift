@@ -1,12 +1,15 @@
 import Foundation
 
-/// M2 pipeline stub: `crop→geo→finger→ill→done` with `Page.status` persistence.
-/// No ORT / OpenCV (ARCHITECTURE M3). UI labels: docs/UIUX.md §4.2.
+/// Compatibility façade — M3 delegates to `PipelineRunner` (selected EP + stage backends).
 final class PipelineStub: @unchecked Sendable {
-    private let stepDurationNanoseconds: UInt64
+    private let runner: PipelineRunner
 
     init(stepDurationNanoseconds: UInt64 = 350_000_000) {
-        self.stepDurationNanoseconds = stepDurationNanoseconds
+        self.runner = PipelineRunner(stepDurationNanoseconds: stepDurationNanoseconds)
+    }
+
+    init(runner: PipelineRunner) {
+        self.runner = runner
     }
 
     func run(
@@ -15,19 +18,6 @@ final class PipelineStub: @unchecked Sendable {
         pageId: String,
         onUpdate: @escaping (PipelineStage) -> Void
     ) {
-        Task { @MainActor in
-            let stages = PipelineStage.processingOrder + [.done]
-            for stage in stages {
-                if stage == .done {
-                    try? store.finalizeStubCleaned(sessionId: sessionId, pageId: pageId)
-                } else {
-                    try? store.updatePageStatus(sessionId: sessionId, pageId: pageId, status: stage)
-                }
-                onUpdate(stage)
-                if stage != .done, stepDurationNanoseconds > 0 {
-                    try? await Task.sleep(nanoseconds: stepDurationNanoseconds)
-                }
-            }
-        }
+        runner.run(store: store, sessionId: sessionId, pageId: pageId, onUpdate: onUpdate)
     }
 }

@@ -8,7 +8,7 @@ struct ProcessStubView: View {
     let onCancel: () -> Void
 
     @State private var current: PipelineStage = .crop
-    @State private var stub = PipelineStub()
+    @State private var runner = OrtBackendFactory.makeRunner()
 
     var body: some View {
         ZStack {
@@ -48,7 +48,7 @@ struct ProcessStubView: View {
             .padding()
         }
         .onAppear {
-            stub.run(store: store, sessionId: sessionId, pageId: pageId) { stage in
+            runner.run(store: store, sessionId: sessionId, pageId: pageId) { stage in
                 current = stage
                 if stage == .done {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {

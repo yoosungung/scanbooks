@@ -106,7 +106,8 @@ final class SessionStore: @unchecked Sendable {
             status: .crop,
             quad: quad,
             metrics: nil,
-            errorCode: nil
+            errorCode: nil,
+            failedStage: nil
         )
         try writePage(page)
         session.pageIds.append(pageId)
@@ -120,6 +121,32 @@ final class SessionStore: @unchecked Sendable {
         var page = try loadPage(sessionId: sessionId, pageId: pageId)
         page.status = status
         try writePage(page)
+    }
+
+    /// Persist a full `Page` snapshot (URIs, metrics, status, errorCode).
+    func savePage(_ page: Page) throws {
+        lock.lock()
+        defer { lock.unlock() }
+        try writePage(page)
+    }
+
+    /// Writes a lossless PNG under `pages/{pageId}/` and returns the relative URI.
+    @discardableResult
+    func writePagePNG(sessionId: String, pageId: String, fileName: String, data: Data) throws -> String {
+        lock.lock()
+        defer { lock.unlock() }
+        guard Self.isPNG(data) else { throw SessionStoreError.notPNG }
+        let dir = pageDir(sessionId: sessionId, pageId: pageId)
+        try ensureDir(dir)
+        let url = dir.appendingPathComponent(fileName)
+        try data.write(to: url, options: .atomic)
+        return "pages/\(pageId)/\(fileName)"
+    }
+
+    func readPageFile(sessionId: String, pageId: String, fileName: String) throws -> Data {
+        let url = pageDir(sessionId: sessionId, pageId: pageId).appendingPathComponent(fileName)
+        guard fm.fileExists(atPath: url.path) else { throw SessionStoreError.pageNotFound(pageId) }
+        return try Data(contentsOf: url)
     }
 
     /// M2 stub: copy `working.png` → `cleaned.png` and set `cleanedUri` (ARCHITECTURE §6 PDF source).
@@ -150,6 +177,10 @@ final class SessionStore: @unchecked Sendable {
 
     func absoluteFile(sessionId: String, relativeUri: String) -> URL {
         sessionDirectory(id: sessionId).appendingPathComponent(relativeUri)
+    }
+
+    func pageDirPublic(sessionId: String, pageId: String) -> URL {
+        pageDir(sessionId: sessionId, pageId: pageId)
     }
 
     private func pageDir(sessionId: String, pageId: String) -> URL {

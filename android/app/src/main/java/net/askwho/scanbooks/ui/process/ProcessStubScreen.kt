@@ -29,7 +29,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import net.askwho.scanbooks.model.PipelineStage
-import net.askwho.scanbooks.process.PipelineStub
+import net.askwho.scanbooks.process.OrtBackendFactory
 import net.askwho.scanbooks.storage.SessionStore
 
 @Composable
@@ -41,10 +41,14 @@ fun ProcessStubScreen(
     onCancel: () -> Unit,
 ) {
     var current by remember { mutableStateOf(PipelineStage.CROP) }
-    val stub = remember { PipelineStub() }
+    val runner = remember { OrtBackendFactory.makeRunner() }
 
     LaunchedEffect(sessionId, pageId) {
-        stub.run(store, sessionId, pageId) { stage -> current = stage }
+        try {
+            runner.run(store, sessionId, pageId) { stage -> current = stage }
+        } catch (_: Exception) {
+            // failed already persisted; stay on Process for cancel
+        }
         if (current == PipelineStage.DONE) {
             delay(400)
             onFinished()

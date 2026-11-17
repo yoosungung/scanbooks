@@ -13,6 +13,8 @@ data class Page(
     val quad: Quad? = null,
     val metrics: PageMetrics? = null,
     val errorCode: String? = null,
+    /** ARCHITECTURE §3 — stage that failed; retry resumes here. */
+    val failedStage: PipelineStage? = null,
 )
 
 /** ARCHITECTURE §4.4 — filled in M3+. */
