@@ -45,13 +45,13 @@ factory `pm-roadmap-sync`는 `##` 아래 **`- [ ]` / `- [x]`** 만 enqueue한다
 
 ## M2 — 앱 스켈레톤 (`ios/`, `android/`)
 
-- [ ] UI는 [docs/UIUX.md](docs/UIUX.md)의 `Camera`(1페이지)·stub `Process`·간단 `Session`·PDF를 따른다
-- [ ] 카메라 프리뷰 + 실시간 테두리
-- [ ] 단장 촬영, 로컬 `ScanSession`/`Page` 저장(중간 PNG)
-- [ ] 파이프라인 stub(`crop→geo→finger→ill` 상태 전이)
-- [x] 파리티 픽스처로 remap/inpaint 단위 테스트 훅 준비 — 증거: `CvBridge` + `ParityRemapInpaintHookTests`/`ParityRemapInpaintHookTest` (remap 파리티 live; inpaint OpenCV 훅)
-- [x] `cleanedUri`(또는 stub) → PDF export — 증거: `PdfExporter`/`PdfExporterTests`·`PdfExporterTest` + PipelineStub `cleaned.png`
-- [ ] vFlat/OSS Document Scanner UX는 참고만(복제·포크 금지)
+- [x] UI는 [docs/UIUX.md](docs/UIUX.md)의 `Camera`(1페이지)·stub `Process`·간단 `Session`·PDF를 따른다 — 증거: PR #8 (`4679c600`)
+- [x] 카메라 프리뷰 + 실시간 테두리 — 증거: PR #9 (`1113c912`)
+- [x] 단장 촬영, 로컬 `ScanSession`/`Page` 저장(중간 PNG) — 증거: PR #10 (`56345717`)
+- [x] 파이프라인 stub(`crop→geo→finger→ill` 상태 전이) — 증거: PR #11 (`c878b056`)
+- [x] 파리티 픽스처로 remap/inpaint 단위 테스트 훅 준비 — 증거: `CvBridge` + `ParityRemapInpaintHookTests`/`ParityRemapInpaintHookTest` (remap 파리티 live; inpaint OpenCV 훅); PR #12 (`4563165b`)
+- [x] `cleanedUri`(또는 stub) → PDF export — 증거: `PdfExporter`/`PdfExporterTests`·`PdfExporterTest` + PipelineStub `cleaned.png`; PR #13 (`416db9f3`)
+- [x] vFlat/OSS Document Scanner UX는 참고만(복제·포크 금지) — 증거: `615012b0` done (PR #8–#13 fork/복제 없음; `docs/UIUX.md` 참고-only)
 
 **완료 기준:** 양 플랫폼에서 촬영→(stub)→PDF 수동 스모크 통과.
 
