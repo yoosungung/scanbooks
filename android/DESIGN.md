@@ -37,7 +37,7 @@ android/
 - 순서: `crop → geo → finger → ill → done`
 - M3: `PipelineRunner`가 BBox crop → 단계 PNG + `PageMetrics`(`workLongEdge`/`geoNetSize`/`ortEp`) 기록
 - Process UI: 단계 리스트 + 단계 ms + `PageMetricsPresentation` 계약 라인(`workLongEdge`/`geoNet`/`EP`); store에서 stage마다 metrics 리로드
-- `StageBackend` 주입: `.onnx` 있으면 ORT 백엔드, 없으면 passthrough. 실패 시 `failed`+`failedStage`+`errorCode`, `startFrom` 재시도
+- `StageBackend` 주입: `.onnx` 있으면 ORT 백엔드, 없으면 passthrough. 실패 시 `failed`+`failedStage`+`errorCode`; `status==failed`면 `failedStage`부터 자동 resume. Process UI: `FailedRetryPresentation` 에러 한 줄 + `이 단계부터 재시도`
 - 선택 EP: `CPUExecutionProvider` (NNAPI deferred — `engine/benches/latency.md`)
 - `PipelineStub` / `StubProcessRunner`는 레거시·단위 테스트용 잔존
 - 프리뷰: Dewarp 없음

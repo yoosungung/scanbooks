@@ -9,13 +9,16 @@ struct ProcessStubView: View {
 
     @State private var current: PipelineStage = .crop
     @State private var metrics: PageMetrics?
+    @State private var errorCode: String?
+    @State private var failedStage: PipelineStage?
+    @State private var retryToken = 0
     @State private var runner = OrtBackendFactory.makeRunner()
 
     var body: some View {
         ZStack {
             Color.black.opacity(0.92).ignoresSafeArea()
             VStack(spacing: 24) {
-                Text("보정 중")
+                Text(current == .failed ? "보정 실패" : "보정 중")
                     .font(.title2.weight(.semibold))
                     .foregroundStyle(.white)
                 Text("보통 10초 안팎")
@@ -57,19 +60,48 @@ struct ProcessStubView: View {
                         .font(.subheadline.weight(.medium))
                 }
 
+                if current == .failed {
+                    if let line = FailedRetryPresentation.errorLine(
+                        failedStage: failedStage,
+                        errorCode: errorCode
+                    ) {
+                        Text(line)
+                            .foregroundStyle(.orange)
+                            .font(.subheadline)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: 320)
+                            .accessibilityLabel(line)
+                    }
+                    Button(FailedRetryPresentation.retryButtonLabel) {
+                        retryToken += 1
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .accessibilityLabel(FailedRetryPresentation.retryButtonLabel)
+                }
+
                 Button("취소", action: onCancel)
                     .foregroundStyle(.white.opacity(0.8))
             }
             .padding()
         }
-        .onAppear {
-            runner.run(store: store, sessionId: sessionId, pageId: pageId) { stage in
-                current = stage
-                metrics = (try? store.loadPage(sessionId: sessionId, pageId: pageId))?.metrics
-                if stage == .done {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                        onFinished()
-                    }
+        .onAppear { startRun() }
+        .onChange(of: retryToken) { _, _ in startRun() }
+    }
+
+    private func startRun() {
+        errorCode = nil
+        failedStage = nil
+        current = .crop
+        runner.run(store: store, sessionId: sessionId, pageId: pageId) { stage in
+            current = stage
+            if let page = try? store.loadPage(sessionId: sessionId, pageId: pageId) {
+                metrics = page.metrics
+                errorCode = page.errorCode
+                failedStage = page.failedStage
+            }
+            if stage == .done {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                    onFinished()
                 }
             }
         }
@@ -88,21 +120,43 @@ struct ProcessStubView: View {
 
     @ViewBuilder
     private func statusIcon(for stage: PipelineStage) -> some View {
-        let index = PipelineStage.processingOrder.firstIndex(of: stage) ?? 0
-        let currentIndex = PipelineStage.processingOrder.firstIndex(of: current) ?? 0
-        if current == .done || index < currentIndex {
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(.green)
-        } else if stage == current {
-            ProgressView()
-                .tint(.white)
+        if current == .failed, let failed = failedStage {
+            let index = PipelineStage.processingOrder.firstIndex(of: stage) ?? 0
+            let failedIndex = PipelineStage.processingOrder.firstIndex(of: failed) ?? 0
+            if stage == failed {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(.orange)
+            } else if index < failedIndex {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+            } else {
+                Image(systemName: "circle")
+                    .foregroundStyle(.white.opacity(0.35))
+            }
         } else {
-            Image(systemName: "circle")
-                .foregroundStyle(.white.opacity(0.35))
+            let index = PipelineStage.processingOrder.firstIndex(of: stage) ?? 0
+            let currentIndex = PipelineStage.processingOrder.firstIndex(of: current) ?? 0
+            if current == .done || index < currentIndex {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+            } else if stage == current {
+                ProgressView()
+                    .tint(.white)
+            } else {
+                Image(systemName: "circle")
+                    .foregroundStyle(.white.opacity(0.35))
+            }
         }
     }
 
     private func statusText(for stage: PipelineStage) -> String {
+        if current == .failed, let failed = failedStage {
+            let index = PipelineStage.processingOrder.firstIndex(of: stage) ?? 0
+            let failedIndex = PipelineStage.processingOrder.firstIndex(of: failed) ?? 0
+            if stage == failed { return "실패" }
+            if index < failedIndex { return "완료" }
+            return "대기"
+        }
         let index = PipelineStage.processingOrder.firstIndex(of: stage) ?? 0
         let currentIndex = PipelineStage.processingOrder.firstIndex(of: current) ?? 0
         if current == .done || index < currentIndex { return "완료" }

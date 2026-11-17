@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -18,6 +19,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -45,17 +47,31 @@ fun ProcessStubScreen(
 ) {
     var current by remember { mutableStateOf(PipelineStage.CROP) }
     var metrics by remember { mutableStateOf<PageMetrics?>(null) }
+    var errorCode by remember { mutableStateOf<String?>(null) }
+    var failedStage by remember { mutableStateOf<PipelineStage?>(null) }
+    var retryToken by remember { mutableIntStateOf(0) }
     val runner = remember { OrtBackendFactory.makeRunner() }
 
-    LaunchedEffect(sessionId, pageId) {
+    LaunchedEffect(sessionId, pageId, retryToken) {
+        errorCode = null
+        failedStage = null
+        current = PipelineStage.CROP
         try {
             runner.run(store, sessionId, pageId) { stage ->
                 current = stage
-                metrics = runCatching { store.loadPage(sessionId, pageId).metrics }.getOrNull()
+                runCatching { store.loadPage(sessionId, pageId) }.getOrNull()?.let { page ->
+                    metrics = page.metrics
+                    errorCode = page.errorCode
+                    failedStage = page.failedStage
+                }
             }
         } catch (_: Exception) {
-            // failed already persisted; stay on Process for cancel
-            metrics = runCatching { store.loadPage(sessionId, pageId).metrics }.getOrNull()
+            runCatching { store.loadPage(sessionId, pageId) }.getOrNull()?.let { page ->
+                current = PipelineStage.FAILED
+                metrics = page.metrics
+                errorCode = page.errorCode
+                failedStage = page.failedStage
+            }
         }
         if (current == PipelineStage.DONE) {
             delay(400)
@@ -72,7 +88,7 @@ fun ProcessStubScreen(
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = "보정 중",
+            text = if (current == PipelineStage.FAILED) "보정 실패" else "보정 중",
             color = Color.White,
             style = MaterialTheme.typography.titleLarge,
         )
@@ -97,11 +113,11 @@ fun ProcessStubScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .semantics {
-                            contentDescription = "${stage.koreanLabel} ${statusText(stage, current)}"
+                            contentDescription = "${stage.koreanLabel} ${statusText(stage, current, failedStage)}"
                         },
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    StatusIcon(stage = stage, current = current)
+                    StatusIcon(stage = stage, current = current, failedStage = failedStage)
                     Spacer(modifier = Modifier.padding(horizontal = 8.dp))
                     Text(text = stage.koreanLabel, color = Color.White)
                     Spacer(modifier = Modifier.weight(1f))
@@ -144,6 +160,30 @@ fun ProcessStubScreen(
             )
         }
 
+        if (current == PipelineStage.FAILED) {
+            FailedRetryPresentation.errorLine(failedStage, errorCode)?.let { line ->
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = line,
+                    color = Color(0xFFFF9800),
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .widthIn(max = 320.dp)
+                        .semantics { contentDescription = line },
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = { retryToken += 1 },
+                modifier = Modifier.semantics {
+                    contentDescription = FailedRetryPresentation.retryButtonLabel
+                },
+            ) {
+                Text(FailedRetryPresentation.retryButtonLabel)
+            }
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
         TextButton(onClick = onCancel) {
             Text("취소", color = Color.White.copy(alpha = 0.8f))
@@ -152,8 +192,22 @@ fun ProcessStubScreen(
 }
 
 @Composable
-private fun StatusIcon(stage: PipelineStage, current: PipelineStage) {
+private fun StatusIcon(
+    stage: PipelineStage,
+    current: PipelineStage,
+    failedStage: PipelineStage?,
+) {
     val order = PipelineStage.processingOrder
+    if (current == PipelineStage.FAILED && failedStage != null) {
+        val index = order.indexOf(stage)
+        val failedIndex = order.indexOf(failedStage)
+        when {
+            stage == failedStage -> Text("✗", color = Color(0xFFFF9800))
+            index in 0 until failedIndex -> Text("✓", color = Color(0xFF4CAF50))
+            else -> Text("○", color = Color.White.copy(alpha = 0.35f))
+        }
+        return
+    }
     val index = order.indexOf(stage)
     val currentIndex = order.indexOf(current).coerceAtLeast(0)
     when {
@@ -170,8 +224,21 @@ private fun StatusIcon(stage: PipelineStage, current: PipelineStage) {
     }
 }
 
-private fun statusText(stage: PipelineStage, current: PipelineStage): String {
+private fun statusText(
+    stage: PipelineStage,
+    current: PipelineStage,
+    failedStage: PipelineStage?,
+): String {
     val order = PipelineStage.processingOrder
+    if (current == PipelineStage.FAILED && failedStage != null) {
+        val index = order.indexOf(stage)
+        val failedIndex = order.indexOf(failedStage)
+        return when {
+            stage == failedStage -> "실패"
+            index in 0 until failedIndex -> "완료"
+            else -> "대기"
+        }
+    }
     val index = order.indexOf(stage)
     val currentIndex = order.indexOf(current).coerceAtLeast(0)
     return when {

@@ -108,13 +108,10 @@ class PipelineRunnerTest {
         } catch (_: StageBackendException) {
         }
         val visited = mutableListOf<PipelineStage>()
-        runner.runBlockingCompatible(
-            store,
-            session.id,
-            page.id,
-            startFrom = PipelineStage.GEO,
-        ) { visited += it }
+        // ARCHITECTURE §1.3 — default startFrom; runner resumes at persisted failedStage.
+        runner.runBlockingCompatible(store, session.id, page.id) { visited += it }
         assertEquals(PipelineStage.GEO, visited.first())
+        assertFalse(visited.contains(PipelineStage.CROP))
         assertEquals(PipelineStage.DONE, visited.last())
         assertEquals(PipelineStage.DONE, store.loadPage(session.id, page.id).status)
         assertNull(store.loadPage(session.id, page.id).failedStage)

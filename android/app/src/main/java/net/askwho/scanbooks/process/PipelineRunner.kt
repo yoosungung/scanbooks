@@ -36,6 +36,13 @@ class PipelineRunner(
         onUpdate: (PipelineStage) -> Unit,
     ): List<PipelineStage> {
         var page = store.loadPage(sessionId, pageId)
+        // ARCHITECTURE §1.3 — resume at failedStage when page is failed.
+        val resume =
+            if (page.status == PipelineStage.FAILED && page.failedStage != null) {
+                page.failedStage!!
+            } else {
+                startFrom
+            }
         var metrics = page.metrics ?: PageMetrics()
         metrics = metrics.copy(
             workLongEdge = workLongEdge,
@@ -45,7 +52,7 @@ class PipelineRunner(
         )
         val visited = mutableListOf<PipelineStage>()
         val order = PipelineStage.processingOrder
-        val startIdx = order.indexOf(startFrom).takeIf { it >= 0 }
+        val startIdx = order.indexOf(resume).takeIf { it >= 0 }
             ?: throw StageBackendException("invalid_start")
 
         try {
@@ -118,7 +125,7 @@ class PipelineRunner(
             return visited
         } catch (e: Exception) {
             val code = (e as? StageBackendException)?.code ?: e.message ?: "unknown"
-            val failedAt = page.status.takeIf { it in PipelineStage.processingOrder } ?: startFrom
+            val failedAt = page.status.takeIf { it in PipelineStage.processingOrder } ?: resume
             page = page.copy(
                 status = PipelineStage.FAILED,
                 failedStage = failedAt,
