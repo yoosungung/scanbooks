@@ -59,7 +59,7 @@ factory `pm-roadmap-sync`는 `##` 아래 **`- [ ]` / `- [x]`** 만 enqueue한다
 
 - [x] ORT Mobile로 `geo → finger → ill` 연동(선택한 EP) — 증거: PR #15 (`caa47a9`)
 - [x] 페이지별 진행 UI, `PageMetrics`(`workLongEdge`, `geoNetSize`, `ortEp` 포함) — 증거: PR #16 (`PageMetricsPresentation` + Process 단계 ms/계약 라인)
-- [x] `failed` + 실패 단계부터 재시도 — 증거: PR (ticket `d9cd8759`) `PipelineRunner` failedStage resume + Process `이 단계부터 재시도`
+- [x] `failed` + 실패 단계부터 재시도 — 증거: PR #17 (`FailedRetryPresentation` + `PipelineRunner` failedStage resume)
 - [ ] 실기기 스모크(중급기 1대 이상/플랫폼)
 
 **완료 기준:** 책 페이지 실촬영 3장 이상에서 `done` 및 PDF 생성.
