@@ -13,6 +13,7 @@
 | [ios/DESIGN.md](ios/DESIGN.md) | iOS 앱 내부 설계 |
 | [android/DESIGN.md](android/DESIGN.md) | Android 앱 내부 설계 |
 | [docs/UIUX.md](docs/UIUX.md) | 공통 UI/UX (vFlat류 패턴 반영) |
+| [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md) | 스토어 전 라이선스·배포 게이트 |
 
 ## 현황
 
@@ -28,4 +29,4 @@
 
 ## 라이선스 주의
 
-DocTr 가중치·코드는 비상업(연구·개인·비영리) 전제가 강합니다. 상업 스토어 배포 전 저자 허가가 필요합니다. 자세한 상태는 [ROADMAP.md](ROADMAP.md) §라이선스 검토를 보세요.
+DocTr 가중치·코드는 비상업(연구·개인·비영리) 전제가 강합니다. 상업 스토어 배포 전 저자 허가가 필요합니다. 게이트·항목 상태는 [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md)와 [ROADMAP.md](ROADMAP.md) §라이선스 검토를 보세요.

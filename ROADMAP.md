@@ -69,7 +69,7 @@ factory `pm-roadmap-sync`는 `##` 아래 **`- [ ]` / `- [x]`** 만 enqueue한다
 - [x] 연속(배치) 스캔, 세션 내 페이지 재정렬·삭제 — 증거: PR #20 (`BatchScanPresentation` + `SessionStore.reorderPages`/`deletePage`)
 - [x] 성능 튜닝, 온디맨드 다운로드 운영 다듬기(M1에서 이미 도입했을 수 있음) — 증거: `ModelCache`/`ModelDeployPolicy` (IllTr onDemand · residentPreferred warmup) + `workLongEdgeMitigated=768` 상수
 - [x] attribution UI, 개인정보(온디바이스) 고지 — 증거: PR #22 (`AttributionPresentation` + Settings + 첫 스캔 툴팁)
-- [ ] 릴리스 체크리스트(스토어 전 라이선스 항목 닫기)
+- [x] 릴리스 체크리스트(스토어 전 라이선스 항목 닫기) — 증거: `docs/RELEASE_CHECKLIST.md` + `ReleaseChecklistGate` (internal **pass** · commercial **blocked**; FingerSeg 가중치 행 **open**)
 
 **완료 기준:** 내부 배포 빌드 + 체크리스트 통과. 상업 스토어는 라이선스 허가 후에만.
 
@@ -80,7 +80,7 @@ factory `pm-roadmap-sync`는 `##` 아래 **`- [ ]` / `- [x]`** 만 enqueue한다
 | DocTr 코드/가중치 비상업 사용 | **확인됨(전제)** | 연구·개인·비영리 빌드는 attribution 후 진행 가능. [DocTr](https://github.com/fh2019ustc/DocTr), [DocTr-Plus LICENSE](https://github.com/fh2019ustc/DocTr-Plus/blob/master/LICENSE.md) |
 | DocTr 상업 배포 | **미결** | `haof@mail.ustc.edu.cn` / `zhwg@ustc.edu.cn` 서면 허가 전 상업 릴리스 금지 |
 | ONNX Runtime / OpenCV | 표준 OSS | About·NOTICE 고지 |
-| FingerSeg 최종 가중치 | **미선정** | M1 확정 시 라이선스 재검토 |
+| FingerSeg 최종 가중치 | **open(미선정)** | 후보 A pending (`models/manifest.json`); 가중치 확정 시 라이선스 재검토 |
 | UX 참고 OSS Document Scanner | MIT, 참고만 | 코드 복사·포크 없음 |
 
 ## 명시적 비범위 (MVP)

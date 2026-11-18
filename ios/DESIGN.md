@@ -44,6 +44,7 @@ ios/
 - 모델 메타: [models/manifest.json](../models/manifest.json)
 - M4: `ModelCache`/`ModelDeployPolicy` — IllTr=`onDemand`, geo/seg/finger=`residentPreferred`; `ensure`·checksum·`ensureResidentPreferred` → `OrtModelCatalog`. `workLongEdgeMitigated=768` 상수만(기본 1024 유지)
 - M4: `AttributionPresentation` + `SettingsView` — 온디바이스 개인정보 고지·DocTr/ORT/OpenCV attribution·About 모델 버전; Camera 첫 스캔 툴팁 + ⋯ → Settings
+- M4: `ReleaseChecklistGate` — 스토어 전 라이선스 게이트([docs/RELEASE_CHECKLIST.md](../docs/RELEASE_CHECKLIST.md)); 내부 pass · 상업 blocked · FingerSeg open
 
 
 ## 저장
