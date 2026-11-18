@@ -5,7 +5,10 @@ object PipelineConstants {
     const val GEO_NET_SIZE = 288
     const val ILL_PATCH_SIZE = 128
     const val WORK_LONG_EDGE = 1024
+    /** Latency mitigation (ARCHITECTURE §5.4 / ROADMAP) — opt-in; default stays 1024. */
+    const val WORK_LONG_EDGE_MITIGATED = 768
     const val CROP_MARGIN_RATIO = 0.05
+
     const val MODEL_VERSION = "doctr-geotr-fp16-v1+fingerseg-pending+illtr-pending"
     /** M1 latency.md — NNAPI deferred; CPU until on-device bench. */
     const val DEFAULT_ORT_EP_ANDROID = "CPUExecutionProvider"

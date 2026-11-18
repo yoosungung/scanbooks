@@ -2,7 +2,7 @@ package net.askwho.scanbooks.process
 
 import java.io.File
 
-/** `models/` manifest + on-device cache (ARCHITECTURE §1.10 — binaries not in git). */
+/** `models/` manifest + on-device cache (ARCHITECTURE §1.10 — binaries not in git). Prefer `ModelCache.catalog()`; IllTr may be absent (on-demand). */
 data class OrtModelCatalog(
     val version: String = PipelineConstants.MODEL_VERSION,
     val geotrFile: String = "geotr.onnx",

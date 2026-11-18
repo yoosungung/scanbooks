@@ -7,7 +7,7 @@ iOS 네이티브 앱 내부 설계. 계약·스키마는 [ARCHITECTURE.md](../AR
 - SwiftUI 셸, AVFoundation 카메라 프리뷰
 - 실시간 문서 테두리(Vision 우선, 부족 시 Rough luminance blob)
 - 로컬 `ScanSession` / `Page` 저장 (`Storage/SessionStore`)
-- ONNX Runtime Mobile 연동 골격 (`PipelineRunner` + `OrtBackendFactory`; `.onnx` 없으면 passthrough)
+- ONNX Runtime Mobile 연동 골격 (`PipelineRunner` + `OrtBackendFactory` + `ModelCache`; `.onnx` 없으면 passthrough)
 - **flow remap** (`CvBridge.remap`, align_corners) · Telea/NS inpaint는 OpenCV 연동 시 동일 훅으로 잠금 (후속)
 - PDFKit export (`Export/PdfExporter` → `export.pdf` / `exportPdfUri`)
 
@@ -41,6 +41,8 @@ ios/
 - `PipelineStub` / `StubProcessRunner`는 레거시·단위 테스트용 잔존
 - 프리뷰: Dewarp 없음 ([ARCHITECTURE §1.4](../ARCHITECTURE.md))
 - 모델 메타: [models/manifest.json](../models/manifest.json)
+- M4: `ModelCache`/`ModelDeployPolicy` — IllTr=`onDemand`, geo/seg/finger=`residentPreferred`; `ensure`·checksum·`ensureResidentPreferred` → `OrtModelCatalog`. `workLongEdgeMitigated=768` 상수만(기본 1024 유지)
+
 
 ## 저장
 

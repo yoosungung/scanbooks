@@ -7,7 +7,7 @@ Android 네이티브 앱 내부 설계. 계약·스키마는 [ARCHITECTURE.md](.
 - Jetpack Compose UI, CameraX 프리뷰
 - 실시간 문서 테두리(Rough luminance blob + 안정화; ML Kit 후속 가능)
 - 로컬 `ScanSession` / `Page` 저장 (`storage/SessionStore`)
-- ONNX Runtime Mobile 연동 골격 (`PipelineRunner` + `OrtBackendFactory`; `.onnx` 없으면 passthrough)
+- ONNX Runtime Mobile 연동 골격 (`PipelineRunner` + `OrtBackendFactory` + `ModelCache`; `.onnx` 없으면 passthrough)
 - **flow remap** (`CvBridge.remap`, align_corners) · Telea/NS inpaint는 OpenCV 연동 시 동일 훅으로 잠금 (후속)
 - `PdfDocument` export (`export/PdfExporter` ← `cleanedUri`; Session CTA)
 
@@ -24,7 +24,7 @@ android/
       camera/          # RoughQuadDetector, EdgeStabilityTracker, YuvToGray, CameraCaptureHolder
       storage/         # SessionStore — sessions/{id}/pages/{pageId}/
       model/           # AppRoute, PipelineStage, ScanSession, Page, Quad, …
-      process/         # PipelineRunner + OrtBackendFactory + PipelineStub(legacy)
+      process/         # PipelineRunner + OrtBackendFactory + ModelCache + PipelineStub(legacy)
       export/          # PdfExporter (cleanedUri → PdfDocument)
       cvbridge/        # remap (pure Kotlin) + inpaintTelea 훅(OpenCV pending)
       session/         # BatchScanPresentation · SessionPageOrder
@@ -43,6 +43,8 @@ android/
 - `PipelineStub` / `StubProcessRunner`는 레거시·단위 테스트용 잔존
 - 프리뷰: Dewarp 없음
 - 모델 메타: [models/manifest.json](../models/manifest.json)
+- M4: `ModelCache`/`ModelDeployPolicy` — IllTr=`onDemand`, geo/seg/finger=`residentPreferred`; `ensure`·checksum·`ensureResidentPreferred` → `OrtModelCatalog`. `WORK_LONG_EDGE_MITIGATED=768` 상수만(기본 1024 유지)
+
 
 ## 저장
 

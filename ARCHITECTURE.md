@@ -38,9 +38,11 @@ Scanbooks의 **컴포넌트 간 계약**과 그 계약을 구현하는 **인터�
 | `ios/` | 카메라 프리뷰, 테두리 UI, 세션/페이지 로컬 저장, ORT 추론 호출, flow remap·inpaint(OpenCV 등), PDF export | 모델 학습·변환 스크립트 소유 |
 | `android/` | 동일(플랫폼 API만 다름) | 동일 |
 | `engine/` | DocTr 변환·양자화·벤치·골든/파리티 픽스처, FingerSeg export, 파이프라인 스펙 | 앱 UI, 스토어 배포 |
-| `models/` | 배포 아티팩트 식별자·버전·체크섬·라이선스 고지 | 학습 코드 |
+| `models/` | 배포 아티팩트 식별자·버전·체크섬·라이선스 고지 · `deploy`/`downloadURL` 메타 | 학습 코드 |
 
 앱은 `engine/`이 발행한 모델 버전 문자열과 입출력·전후처리 계약을 그대로 소비한다. 앱이 독자적으로 정규화 상수·flow 좌표 규약·패치 stride를 바꾸지 않는다.
+
+`models/manifest.json` 아티팩트 필드(앱 `ModelCache` 소비): `file`, `checksumSha256`, `downloadURL`(nullable), `deploy`=`residentPreferred`|`onDemand`. **IllTr은 onDemand**(§5.4 latency) — 런치 warmup은 residentPreferred만. 미캐시·미번들 시 해당 단계는 기존처럼 passthrough(§1.3 순서 유지).
 
 ## 3. 처리 파이프라인
 
