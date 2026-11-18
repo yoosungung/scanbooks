@@ -50,11 +50,13 @@ import net.askwho.scanbooks.camera.CameraCaptureHolder
 import net.askwho.scanbooks.model.OverlayKind
 import net.askwho.scanbooks.model.PreviewEdgeState
 import net.askwho.scanbooks.model.Quad
+import net.askwho.scanbooks.session.BatchScanPresentation
 import java.util.concurrent.Executors
 
 @Composable
 fun CameraScreen(
     pageCount: Int,
+    processingCount: Int = 0,
     onCaptured: (ByteArray, Quad?) -> Unit,
     onOpenSession: () -> Unit,
 ) {
@@ -150,6 +152,20 @@ fun CameraScreen(
                         .padding(horizontal = 12.dp, vertical = 6.dp),
                 )
                 Text("⋯", color = Color.White.copy(alpha = 0.5f))
+            }
+
+            BatchScanPresentation.badgeLabel(processingCount)?.let { badge ->
+                Text(
+                    text = badge,
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(top = 8.dp)
+                        .background(Color(0xFF2196F3).copy(alpha = 0.85f), RoundedCornerShape(50))
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                        .semantics { contentDescription = badge },
+                )
             }
 
             Spacer(modifier = Modifier.weight(1f))

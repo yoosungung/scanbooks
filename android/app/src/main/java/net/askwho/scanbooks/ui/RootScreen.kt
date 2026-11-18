@@ -8,15 +8,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.askwho.scanbooks.export.PdfExporter
 import net.askwho.scanbooks.export.PdfExporterError
 import net.askwho.scanbooks.model.AppRoute
-import net.askwho.scanbooks.model.Quad
+import net.askwho.scanbooks.model.PipelineStage
+import net.askwho.scanbooks.process.OrtBackendFactory
+import net.askwho.scanbooks.session.BatchScanPresentation
+import net.askwho.scanbooks.session.SessionPageOrder
 import net.askwho.scanbooks.storage.SessionStore
 import net.askwho.scanbooks.ui.camera.CameraScreen
-import net.askwho.scanbooks.ui.process.ProcessStubScreen
+import net.askwho.scanbooks.ui.session.SessionPageRow
 import net.askwho.scanbooks.ui.session.SessionScreen
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -26,23 +33,39 @@ import java.util.Locale
 fun RootScreen() {
     val context = LocalContext.current
     val store = remember { SessionStore(context.filesDir) }
+    val runner = remember { OrtBackendFactory.makeRunner() }
+    val scope = rememberCoroutineScope()
     var route by remember { mutableStateOf(AppRoute.CAMERA) }
     var pageCount by remember { mutableIntStateOf(0) }
     var cleanedPageCount by remember { mutableIntStateOf(0) }
+    var processingCount by remember { mutableIntStateOf(0) }
     var sessionTitle by remember { mutableStateOf(defaultTitle()) }
     var activeSessionId by remember { mutableStateOf<String?>(null) }
-    var activePageId by remember { mutableStateOf<String?>(null) }
+    var sessionPages by remember { mutableStateOf<List<SessionPageRow>>(emptyList()) }
     var storeError by remember { mutableStateOf<String?>(null) }
 
-    fun refreshCounts(sessionId: String?) {
+    fun refreshSessionState(sessionId: String?) {
         if (sessionId == null) {
             pageCount = 0
             cleanedPageCount = 0
+            processingCount = 0
+            sessionPages = emptyList()
             return
         }
         val session = store.loadSession(sessionId)
         pageCount = session.pageIds.size
-        cleanedPageCount = session.pageIds.count { store.loadPage(sessionId, it).cleanedUri != null }
+        val rows = mutableListOf<SessionPageRow>()
+        val statuses = mutableListOf<PipelineStage>()
+        var cleaned = 0
+        for (pageId in session.pageIds) {
+            val page = store.loadPage(sessionId, pageId)
+            rows += SessionPageRow(page.id, page.status)
+            statuses += page.status
+            if (page.cleanedUri != null) cleaned++
+        }
+        sessionPages = rows
+        cleanedPageCount = cleaned
+        processingCount = BatchScanPresentation.processingCount(statuses)
     }
 
     if (storeError != null) {
@@ -59,75 +82,74 @@ fun RootScreen() {
     when (route) {
         AppRoute.CAMERA -> CameraScreen(
             pageCount = pageCount,
+            processingCount = processingCount,
             onCaptured = { jpeg, quad ->
-                persistCapture(
-                    store = store,
-                    activeSessionId = activeSessionId,
-                    sessionTitle = sessionTitle,
-                    jpeg = jpeg,
-                    quad = quad,
-                    onSuccess = { sessionId, pageId, _, cleaned ->
-                        activeSessionId = sessionId
-                        activePageId = pageId
-                        pageCount = store.loadSession(sessionId).pageIds.size
-                        cleanedPageCount = cleaned
-                        route = AppRoute.PROCESS
-                    },
-                    onError = { storeError = "ScanSession/Page를 저장하지 못했습니다." },
-                )
+                try {
+                    val sessionId = activeSessionId ?: store.createSession(title = sessionTitle).id
+                    activeSessionId = sessionId
+                    val page = store.appendPage(sessionId = sessionId, originalJpeg = jpeg, quad = quad)
+                    refreshSessionState(sessionId)
+                    scope.launch {
+                        withContext(Dispatchers.Default) {
+                            runner.runBlockingCompatible(store, sessionId, page.id) {
+                                scope.launch(Dispatchers.Main.immediate) {
+                                    refreshSessionState(sessionId)
+                                }
+                            }
+                        }
+                        refreshSessionState(sessionId)
+                    }
+                } catch (_: Exception) {
+                    storeError = "ScanSession/Page를 저장하지 못했습니다."
+                }
             },
             onOpenSession = {
-                refreshCounts(activeSessionId)
+                refreshSessionState(activeSessionId)
                 route = AppRoute.SESSION
             },
         )
         AppRoute.PROCESS -> {
-            val sessionId = activeSessionId
-            val pageId = activePageId
-            if (sessionId != null && pageId != null) {
-                ProcessStubScreen(
-                    store = store,
-                    sessionId = sessionId,
-                    pageId = pageId,
-                    onFinished = {
-                        refreshCounts(sessionId)
-                        route = AppRoute.CAMERA
-                    },
-                    onCancel = { route = AppRoute.CAMERA },
-                )
-            }
+            // Continuous batch stays on camera (UIUX §3.2); keep enum for AppRoute tests.
+            CameraScreen(
+                pageCount = pageCount,
+                processingCount = processingCount,
+                onCaptured = { _, _ -> },
+                onOpenSession = { route = AppRoute.CAMERA },
+            )
         }
         AppRoute.SESSION -> SessionScreen(
             title = sessionTitle,
             onTitleChange = { sessionTitle = it },
-            pageCount = pageCount,
+            pages = sessionPages,
             cleanedPageCount = cleanedPageCount,
             onBack = { route = AppRoute.CAMERA },
+            onAddScan = { route = AppRoute.CAMERA },
+            onMove = { pageId, toIndex ->
+                val sessionId = activeSessionId ?: return@SessionScreen
+                val session = store.loadSession(sessionId)
+                val from = session.pageIds.indexOf(pageId)
+                val next = SessionPageOrder.move(session.pageIds, from, toIndex) ?: return@SessionScreen
+                try {
+                    store.reorderPages(sessionId, next)
+                    refreshSessionState(sessionId)
+                } catch (_: Exception) {
+                    storeError = "페이지 순서를 바꾸지 못했습니다."
+                }
+            },
+            onDelete = { pageId ->
+                val sessionId = activeSessionId ?: return@SessionScreen
+                try {
+                    store.deletePage(sessionId, pageId)
+                    refreshSessionState(sessionId)
+                } catch (_: Exception) {
+                    storeError = "페이지를 삭제하지 못했습니다."
+                }
+            },
             onExportPdf = {
                 val sessionId = activeSessionId ?: throw PdfExporterError.NoCleanedPages
                 PdfExporter().export(sessionId, store)
             },
         )
-    }
-}
-
-private fun persistCapture(
-    store: SessionStore,
-    activeSessionId: String?,
-    sessionTitle: String,
-    jpeg: ByteArray,
-    quad: Quad?,
-    onSuccess: (sessionId: String, pageId: String, pageCount: Int, cleanedPageCount: Int) -> Unit,
-    onError: () -> Unit,
-) {
-    try {
-        val sessionId = activeSessionId ?: store.createSession(title = sessionTitle).id
-        val page = store.appendPage(sessionId = sessionId, originalJpeg = jpeg, quad = quad)
-        val session = store.loadSession(sessionId)
-        val cleaned = session.pageIds.count { store.loadPage(sessionId, it).cleanedUri != null }
-        onSuccess(sessionId, page.id, session.pageIds.size, cleaned)
-    } catch (_: Exception) {
-        onError()
     }
 }
 

@@ -66,7 +66,7 @@ factory `pm-roadmap-sync`는 `##` 아래 **`- [ ]` / `- [x]`** 만 enqueue한다
 
 ## M4 — 배치·폴리시
 
-- [ ] 연속(배치) 스캔, 세션 내 페이지 재정렬·삭제
+- [x] 연속(배치) 스캔, 세션 내 페이지 재정렬·삭제 — 증거: PR #20 (`BatchScanPresentation` + `SessionStore.reorderPages`/`deletePage`)
 - [ ] 성능 튜닝, 온디맨드 다운로드 운영 다듬기(M1에서 이미 도입했을 수 있음)
 - [ ] attribution UI, 개인정보(온디바이스) 고지
 - [ ] 릴리스 체크리스트(스토어 전 라이선스 항목 닫기)
