@@ -16,6 +16,7 @@ This file provides guidance to AI coding assistants (Claude Code, Codex, Gemini,
 | `ROADMAP.md` | 수행 계획(마일스톤·순서·미결정 항목) | 루트 |
 | `<comp>/DESIGN.md` | 컴포넌트 *내부* 설계 + `## Commands` (빌드/실행/테스트) | `engine/`, `ios/`, `android/` |
 | `docs/UIUX.md` | iOS/Android **공통** 화면·플로우·카피·피드백 (플랫폼 위젯 구현은 각 DESIGN) | `docs/` |
+| `docs/RELEASE_CHECKLIST.md` | 스토어 전 라이선스·배포 게이트 (내부 pass / 상업 blocked) | `docs/` |
 | `models/` | ONNX 등 아티팩트 메타·체크섬(바이너리는 LFS/릴리스) | 루트 |
  
 규칙:
