@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "note": "ONNX binaries are not committed (ARCHITECTURE §1.10). Place Release/LFS artifacts next to this manifest or under app bundle Models/.",
+  "note": "ONNX binaries are not committed (ARCHITECTURE §1.10). Place Release/LFS artifacts next to this manifest or under app bundle Models/. deploy=residentPreferred|onDemand; onDemand skips launch warmup (M1 IllTr latency).",
   "defaultEp": {
     "ios": "CoreML_MLProgram_NeuralEngine+CPU_fallback",
     "android": "CPUExecutionProvider"
@@ -10,17 +10,23 @@
       "file": "geotr.onnx",
       "netSize": 288,
       "quant": "dynamic_int8",
+      "deploy": "residentPreferred",
+      "downloadURL": null,
       "checksumSha256": null
     },
     "seg": {
       "file": "seg.onnx",
       "netSize": 288,
       "quant": "fp16_or_fp32",
+      "deploy": "residentPreferred",
+      "downloadURL": null,
       "checksumSha256": null
     },
     "fingerseg": {
       "file": "fingerseg.onnx",
       "status": "candidate_a_pending_weights",
+      "deploy": "residentPreferred",
+      "downloadURL": null,
       "checksumSha256": null
     },
     "illtr": {
@@ -28,6 +34,8 @@
       "patchSize": 128,
       "overlap": 0.125,
       "status": "blocked_on_export_simplify",
+      "deploy": "onDemand",
+      "downloadURL": null,
       "checksumSha256": null
     }
   },

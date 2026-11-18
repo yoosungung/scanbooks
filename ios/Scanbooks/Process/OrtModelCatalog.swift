@@ -1,6 +1,7 @@
 import Foundation
 
 /// `models/` manifest + on-device cache paths (ARCHITECTURE §1.10 — binaries not in git).
+/// Prefer `ModelCache.catalog()` after ensure/warmup; IllTr may be absent (on-demand).
 struct OrtModelCatalog: Equatable, Sendable {
     var version: String
     var geotrFile: String
