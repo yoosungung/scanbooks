@@ -27,8 +27,8 @@ class PipelineStageTest {
     }
 
     @Test
-    fun m2ShellRoutesAreDistinct() {
-        assertEquals(3, AppRoute.entries.size)
+    fun shellRoutesAreDistinct() {
+        assertEquals(4, AppRoute.entries.size)
     }
 
     @Test

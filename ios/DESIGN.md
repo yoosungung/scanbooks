@@ -25,6 +25,7 @@ ios/
     Storage/               # SessionStore — sessions/{id}/pages/{pageId}/
     Process/               # PipelineRunner + OrtBackendFactory + PipelineStub(legacy) + stage UI
     Session/               # grid · reorder/delete · 추가 스캔 · PDF CTA · BatchScanPresentation
+    Settings/              # AttributionPresentation · SettingsView (privacy + OSS + About)
     Export/                # PdfExporter (cleanedUri → PDFKit)
     CvBridge/              # remap (pure Swift) + inpaintTelea 훅(OpenCV pending)
     Models/                # AppRoute, PipelineStage, ScanSession, Page, Quad, …
@@ -42,6 +43,7 @@ ios/
 - 프리뷰: Dewarp 없음 ([ARCHITECTURE §1.4](../ARCHITECTURE.md))
 - 모델 메타: [models/manifest.json](../models/manifest.json)
 - M4: `ModelCache`/`ModelDeployPolicy` — IllTr=`onDemand`, geo/seg/finger=`residentPreferred`; `ensure`·checksum·`ensureResidentPreferred` → `OrtModelCatalog`. `workLongEdgeMitigated=768` 상수만(기본 1024 유지)
+- M4: `AttributionPresentation` + `SettingsView` — 온디바이스 개인정보 고지·DocTr/ORT/OpenCV attribution·About 모델 버전; Camera 첫 스캔 툴팁 + ⋯ → Settings
 
 
 ## 저장

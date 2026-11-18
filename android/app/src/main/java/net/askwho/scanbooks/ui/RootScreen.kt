@@ -25,6 +25,7 @@ import net.askwho.scanbooks.storage.SessionStore
 import net.askwho.scanbooks.ui.camera.CameraScreen
 import net.askwho.scanbooks.ui.session.SessionPageRow
 import net.askwho.scanbooks.ui.session.SessionScreen
+import net.askwho.scanbooks.ui.settings.SettingsScreen
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -107,6 +108,7 @@ fun RootScreen() {
                 refreshSessionState(activeSessionId)
                 route = AppRoute.SESSION
             },
+            onOpenSettings = { route = AppRoute.SETTINGS },
         )
         AppRoute.PROCESS -> {
             // Continuous batch stays on camera (UIUX §3.2); keep enum for AppRoute tests.
@@ -149,6 +151,9 @@ fun RootScreen() {
                 val sessionId = activeSessionId ?: throw PdfExporterError.NoCleanedPages
                 PdfExporter().export(sessionId, store)
             },
+        )
+        AppRoute.SETTINGS -> SettingsScreen(
+            onBack = { route = AppRoute.CAMERA },
         )
     }
 }

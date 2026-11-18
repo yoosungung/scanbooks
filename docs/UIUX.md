@@ -48,7 +48,7 @@ flowchart TB
 | `Session` | 세션(책) | 페이지 그리드·재정렬·PDF | M2 stub / M4 배치 |
 | `Library` | 라이브러리 | 세션 목록·폴더(간단) | M4 |
 | `Export` | 내보내기 | PDF(필수), 이미지 공유 | M2+ |
-| `Settings` | 설정 | 손가락/색보정 토글, 타이머, 고지 | M3 |
+| `Settings` | 설정 | 개인정보·attribution·About (토글/타이머는 후속) | M4 |
 
 ## 3. 핵심 사용자 플로우
 
@@ -214,8 +214,8 @@ sequenceDiagram
 | 마일스톤 | UI 범위 |
 |---|---|
 | M2 | `Camera`(1페이지) · stub `Process` · 간단 `Session` · PDF |
-| M3 | 실파이프라인 `Process` · `PageReview` Before/After · Settings 고지 |
-| M4 | `Library` 폴더 · 배치/타이머/자동 · 2페이지 · 재정렬 |
+| M3 | 실파이프라인 `Process` · `PageReview` Before/After |
+| M4 | `Library` 폴더 · 배치/타이머/자동 · 2페이지 · 재정렬 · Settings 개인정보/attribution |
 
 ## 10. 미결정 (구현 전 닫을 것)
 

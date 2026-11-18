@@ -2,9 +2,9 @@ import XCTest
 @testable import Scanbooks
 
 final class AppRouteTests: XCTestCase {
-    func testM2ShellRoutesAreDistinct() {
-        let routes: [AppRoute] = [.camera, .process, .session]
-        XCTAssertEqual(Set(routes.map { String(describing: $0) }).count, 3)
+    func testShellRoutesAreDistinct() {
+        let routes: [AppRoute] = [.camera, .process, .session, .settings]
+        XCTAssertEqual(Set(routes.map { String(describing: $0) }).count, 4)
     }
 
     func testStubProcessAdvancesThroughProcessingOrderThenDone() {
