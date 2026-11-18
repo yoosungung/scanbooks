@@ -6,10 +6,11 @@ struct CameraView: View {
     var processingCount: Int = 0
     let onCaptured: (Data, Quad?) -> Void
     let onOpenSession: () -> Void
+    var onOpenSettings: () -> Void = {}
 
     @StateObject private var camera = CameraSessionController()
-    @AppStorage("scanbooks.didShowDewarpTip") private var didShowDewarpTip = false
-    @State private var showDewarpTip = false
+    @AppStorage("scanbooks.didShowPrivacyTip") private var didShowPrivacyTip = false
+    @State private var showPrivacyTip = false
     @State private var captureError: String?
 
     var body: some View {
@@ -57,14 +58,16 @@ struct CameraView: View {
         }
         .onAppear {
             camera.start()
-            if !didShowDewarpTip {
-                showDewarpTip = true
-                didShowDewarpTip = true
+            if !didShowPrivacyTip {
+                showPrivacyTip = true
+                didShowPrivacyTip = true
             }
         }
         .onDisappear { camera.stop() }
-        .alert("촬영 후 곡면을 펴고 손가락을 지웁니다", isPresented: $showDewarpTip) {
+        .alert(AttributionPresentation.firstScanTipTitle, isPresented: $showPrivacyTip) {
             Button("확인", role: .cancel) {}
+        } message: {
+            Text(AttributionPresentation.firstScanTipDetail)
         }
         .alert("촬영 실패", isPresented: Binding(
             get: { captureError != nil },
@@ -127,10 +130,11 @@ struct CameraView: View {
                 .padding(.vertical, 6)
                 .background(Color.white.opacity(0.15), in: Capsule())
             Spacer()
-            Image(systemName: "ellipsis")
-                .foregroundStyle(.white)
-                .accessibilityLabel("설정")
-                .opacity(0.5)
+            Button(action: onOpenSettings) {
+                Image(systemName: "ellipsis")
+                    .foregroundStyle(.white)
+                    .accessibilityLabel("설정")
+            }
         }
     }
 

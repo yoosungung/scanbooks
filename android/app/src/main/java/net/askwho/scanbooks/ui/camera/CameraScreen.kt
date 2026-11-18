@@ -51,6 +51,7 @@ import net.askwho.scanbooks.model.OverlayKind
 import net.askwho.scanbooks.model.PreviewEdgeState
 import net.askwho.scanbooks.model.Quad
 import net.askwho.scanbooks.session.BatchScanPresentation
+import net.askwho.scanbooks.ui.settings.AttributionPresentation
 import java.util.concurrent.Executors
 
 @Composable
@@ -59,6 +60,7 @@ fun CameraScreen(
     processingCount: Int = 0,
     onCaptured: (ByteArray, Quad?) -> Unit,
     onOpenSession: () -> Unit,
+    onOpenSettings: () -> Unit = {},
 ) {
     val context = LocalContext.current
     var permissionGranted by remember {
@@ -73,10 +75,10 @@ fun CameraScreen(
     var captureError by remember { mutableStateOf<String?>(null) }
     val captureHolder = remember { CameraCaptureHolder() }
     val captureExecutor = remember { Executors.newSingleThreadExecutor() }
-    var showDewarpTip by remember {
+    var showPrivacyTip by remember {
         mutableStateOf(
             !context.getSharedPreferences("scanbooks", 0)
-                .getBoolean("didShowDewarpTip", false),
+                .getBoolean("didShowPrivacyTip", false),
         )
     }
 
@@ -93,11 +95,11 @@ fun CameraScreen(
         }
     }
 
-    LaunchedEffect(showDewarpTip) {
-        if (showDewarpTip) {
+    LaunchedEffect(showPrivacyTip) {
+        if (showPrivacyTip) {
             context.getSharedPreferences("scanbooks", 0)
                 .edit()
-                .putBoolean("didShowDewarpTip", true)
+                .putBoolean("didShowPrivacyTip", true)
                 .apply()
         }
     }
@@ -151,7 +153,14 @@ fun CameraScreen(
                         .background(Color.White.copy(alpha = 0.15f), RoundedCornerShape(50))
                         .padding(horizontal = 12.dp, vertical = 6.dp),
                 )
-                Text("⋯", color = Color.White.copy(alpha = 0.5f))
+                Text(
+                    text = "⋯",
+                    color = Color.White,
+                    modifier = Modifier
+                        .semantics { contentDescription = "설정" }
+                        .clickable(onClick = onOpenSettings)
+                        .padding(8.dp),
+                )
             }
 
             BatchScanPresentation.badgeLabel(processingCount)?.let { badge ->
@@ -205,19 +214,25 @@ fun CameraScreen(
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
-            if (showDewarpTip) {
+            if (showPrivacyTip) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(12.dp))
                         .padding(12.dp)
-                        .clickable { showDewarpTip = false },
+                        .clickable { showPrivacyTip = false },
                 ) {
                     Text(
-                        text = "촬영 후 곡면을 펴고 손가락을 지웁니다",
+                        text = AttributionPresentation.firstScanTipTitle,
                         color = Color.White,
                         style = MaterialTheme.typography.bodySmall,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = AttributionPresentation.firstScanTipDetail,
+                        color = Color.White.copy(alpha = 0.85f),
+                        style = MaterialTheme.typography.labelSmall,
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))

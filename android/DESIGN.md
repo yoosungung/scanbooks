@@ -28,7 +28,7 @@ android/
       export/          # PdfExporter (cleanedUri → PdfDocument)
       cvbridge/        # remap (pure Kotlin) + inpaintTelea 훅(OpenCV pending)
       session/         # BatchScanPresentation · SessionPageOrder
-      ui/camera|process|session/
+      ui/camera|process|session|settings/  # AttributionPresentation · SettingsScreen
       MainActivity.kt
     src/test/          # + engine parity fixtures 리소스
 ```
@@ -44,6 +44,7 @@ android/
 - 프리뷰: Dewarp 없음
 - 모델 메타: [models/manifest.json](../models/manifest.json)
 - M4: `ModelCache`/`ModelDeployPolicy` — IllTr=`onDemand`, geo/seg/finger=`residentPreferred`; `ensure`·checksum·`ensureResidentPreferred` → `OrtModelCatalog`. `WORK_LONG_EDGE_MITIGATED=768` 상수만(기본 1024 유지)
+- M4: `AttributionPresentation` + `SettingsScreen` — 온디바이스 개인정보 고지·DocTr/ORT/OpenCV attribution·About 모델 버전; Camera 첫 스캔 툴팁 + ⋯ → Settings
 
 
 ## 저장

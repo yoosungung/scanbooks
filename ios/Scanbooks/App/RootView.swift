@@ -31,7 +31,8 @@ struct RootView: View {
                     onOpenSession: {
                         refreshSessionState()
                         route = .session
-                    }
+                    },
+                    onOpenSettings: { route = .settings }
                 )
             case .process:
                 // Retained for failed-page retry path; continuous batch stays on camera.
@@ -57,6 +58,8 @@ struct RootView: View {
                         return try PdfExporter().export(sessionId: sessionId, store: store)
                     }
                 )
+            case .settings:
+                SettingsView(onBack: { route = .camera })
             }
         }
         .preferredColorScheme(.dark)
