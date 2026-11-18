@@ -6,6 +6,7 @@ enum SessionStoreError: Error, Equatable {
     case pageNotFound(String)
     case notPNG
     case invalidJPEG
+    case invalidPageOrder
 }
 
 /// Local `sessions/{id}/` store — ARCHITECTURE §1.8 · §1.11 · ios/DESIGN.md.
@@ -173,6 +174,44 @@ final class SessionStore: @unchecked Sendable {
         var session = try loadSession(id: sessionId)
         session.exportPdfUri = relativeUri
         try writeSession(session)
+    }
+
+    /// Reorders `pageIds` (must be a permutation) and rewrites each `Page.index` (UIUX §4.4).
+    func reorderPages(sessionId: String, pageIds: [String]) throws {
+        lock.lock()
+        defer { lock.unlock() }
+        var session = try loadSession(id: sessionId)
+        guard Set(pageIds) == Set(session.pageIds), pageIds.count == session.pageIds.count else {
+            throw SessionStoreError.invalidPageOrder
+        }
+        session.pageIds = pageIds
+        try writeSession(session)
+        try reindexPages(sessionId: sessionId, pageIds: pageIds)
+    }
+
+    /// Deletes page files and removes id from session order; remaining pages reindexed (ARCHITECTURE §1.8).
+    func deletePage(sessionId: String, pageId: String) throws {
+        lock.lock()
+        defer { lock.unlock() }
+        var session = try loadSession(id: sessionId)
+        guard session.pageIds.contains(pageId) else { throw SessionStoreError.pageNotFound(pageId) }
+        let dir = pageDir(sessionId: sessionId, pageId: pageId)
+        if fm.fileExists(atPath: dir.path) {
+            try fm.removeItem(at: dir)
+        }
+        session.pageIds.removeAll { $0 == pageId }
+        try writeSession(session)
+        try reindexPages(sessionId: sessionId, pageIds: session.pageIds)
+    }
+
+    private func reindexPages(sessionId: String, pageIds: [String]) throws {
+        for (index, pageId) in pageIds.enumerated() {
+            var page = try loadPage(sessionId: sessionId, pageId: pageId)
+            if page.index != index {
+                page.index = index
+                try writePage(page)
+            }
+        }
     }
 
     func absoluteFile(sessionId: String, relativeUri: String) -> URL {

@@ -27,6 +27,7 @@ android/
       process/         # PipelineRunner + OrtBackendFactory + PipelineStub(legacy)
       export/          # PdfExporter (cleanedUri → PdfDocument)
       cvbridge/        # remap (pure Kotlin) + inpaintTelea 훅(OpenCV pending)
+      session/         # BatchScanPresentation · SessionPageOrder
       ui/camera|process|session/
       MainActivity.kt
     src/test/          # + engine parity fixtures 리소스
@@ -50,7 +51,7 @@ android/
 - 후속 단계: `cropped.png` / `dewarped.png` / `cleaned.png` (M2 stub는 working→cleaned 복사)
 - PDF: `cleanedUri` 있는 페이지만 `sessions/{id}/export.pdf` ([ARCHITECTURE §6](../ARCHITECTURE.md))
 - 스키마 필드명·단계 enum은 iOS·ARCHITECTURE와 동일
-- 셔터 → CameraX `ImageCapture` JPEG → `appendPage` → stub Process 화면
+- 셔터 → CameraX `ImageCapture` JPEG → `appendPage` → 백그라운드 `PipelineRunner`(연속 배치, Camera 코너 `처리 중 N장`) · Session `reorderPages`/`deletePage`
 
 ## 파리티
 

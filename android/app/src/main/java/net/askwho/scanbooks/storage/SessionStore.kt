@@ -118,6 +118,38 @@ class SessionStore(filesDir: File) {
         persist(loadSession(id).copy(title = title))
     }
 
+    /** Reorders `pageIds` (must be a permutation) and rewrites each `Page.index` (UIUX §4.4). */
+    fun reorderPages(sessionId: String, pageIds: List<String>) {
+        val session = loadSession(sessionId)
+        require(pageIds.toSet() == session.pageIds.toSet() && pageIds.size == session.pageIds.size) {
+            "invalidPageOrder"
+        }
+        persist(session.copy(pageIds = pageIds))
+        reindexPages(sessionId, pageIds)
+    }
+
+    /** Deletes page files and removes id from session order; remaining pages reindexed. */
+    fun deletePage(sessionId: String, pageId: String) {
+        val session = loadSession(sessionId)
+        require(session.pageIds.contains(pageId)) { "pageNotFound:$pageId" }
+        val dir = pageDirectory(sessionId, pageId)
+        if (dir.exists()) {
+            dir.deleteRecursively()
+        }
+        val nextIds = session.pageIds.filterNot { it == pageId }
+        persist(session.copy(pageIds = nextIds))
+        reindexPages(sessionId, nextIds)
+    }
+
+    private fun reindexPages(sessionId: String, pageIds: List<String>) {
+        pageIds.forEachIndexed { index, pageId ->
+            val page = loadPage(sessionId, pageId)
+            if (page.index != index) {
+                persist(page.copy(index = index))
+            }
+        }
+    }
+
     fun absoluteFile(sessionId: String, relativeUri: String): File =
         File(sessionDirectory(sessionId), relativeUri)
 

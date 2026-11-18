@@ -94,6 +94,45 @@ class SessionStoreTest {
         }
     }
 
+    @Test
+    fun reorderPagesPersistsOrderAndIndexes() {
+        val session = store.createSession("정렬")
+        val p0 = store.appendPage(session.id, tinyJpeg(), tinyPng(), null)
+        val p1 = store.appendPage(session.id, tinyJpeg(), tinyPng(), null)
+        val p2 = store.appendPage(session.id, tinyJpeg(), tinyPng(), null)
+        store.reorderPages(session.id, listOf(p2.id, p0.id, p1.id))
+        assertEquals(listOf(p2.id, p0.id, p1.id), store.loadSession(session.id).pageIds)
+        assertEquals(0, store.loadPage(session.id, p2.id).index)
+        assertEquals(1, store.loadPage(session.id, p0.id).index)
+        assertEquals(2, store.loadPage(session.id, p1.id).index)
+    }
+
+    @Test
+    fun reorderPagesRejectsNonPermutation() {
+        val session = store.createSession("거부")
+        val p0 = store.appendPage(session.id, tinyJpeg(), tinyPng(), null)
+        try {
+            store.reorderPages(session.id, listOf(p0.id, "missing"))
+            org.junit.Assert.fail("expected IllegalArgumentException")
+        } catch (_: IllegalArgumentException) {
+            // expected
+        }
+    }
+
+    @Test
+    fun deletePageRemovesFilesAndReindexes() {
+        val session = store.createSession("삭제")
+        val p0 = store.appendPage(session.id, tinyJpeg(), tinyPng(), null)
+        val p1 = store.appendPage(session.id, tinyJpeg(), tinyPng(), null)
+        val p2 = store.appendPage(session.id, tinyJpeg(), tinyPng(), null)
+        val removedDir = File(store.sessionDirectory(session.id), "pages/${p1.id}")
+        store.deletePage(session.id, p1.id)
+        assertEquals(listOf(p0.id, p2.id), store.loadSession(session.id).pageIds)
+        assertFalse(removedDir.exists())
+        assertEquals(0, store.loadPage(session.id, p0.id).index)
+        assertEquals(1, store.loadPage(session.id, p2.id).index)
+    }
+
     private fun tinyJpeg(): ByteArray =
         Base64.getDecoder().decode(
             "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAGcP//EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAQUCf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQMBAT8Bf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQIBAT8Bf//EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEABj8Cf//EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAT8hf//Z",

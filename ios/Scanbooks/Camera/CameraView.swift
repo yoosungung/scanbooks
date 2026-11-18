@@ -3,6 +3,7 @@ import SwiftUI
 /// M2 Camera — full-bleed preview + rough/Vision realtime quad (UIUX §4.1).
 struct CameraView: View {
     let pageCount: Int
+    var processingCount: Int = 0
     let onCaptured: (Data, Quad?) -> Void
     let onOpenSession: () -> Void
 
@@ -28,6 +29,16 @@ struct CameraView: View {
 
             VStack {
                 topBar
+                if let badge = BatchScanPresentation.badgeLabel(processingCount: processingCount) {
+                    Text(badge)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.blue.opacity(0.85), in: Capsule())
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .accessibilityLabel(badge)
+                }
                 Spacer()
                 if !camera.edgeState.hintCopy.isEmpty {
                     Text(camera.edgeState.hintCopy)

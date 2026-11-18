@@ -91,6 +91,74 @@ final class SessionStoreTests: XCTestCase {
         XCTAssertEqual(try store.loadSession(id: session.id).pageIds, [p0.id, p1.id])
     }
 
+    func testReorderPagesPersistsOrderAndIndexes() throws {
+        let session = try store.createSession(title: "정렬")
+        let p0 = try store.appendPage(
+            sessionId: session.id,
+            originalJPEG: Self.minimalJPEG(),
+            workingPNG: Self.minimalPNG(),
+            quad: nil
+        )
+        let p1 = try store.appendPage(
+            sessionId: session.id,
+            originalJPEG: Self.minimalJPEG(),
+            workingPNG: Self.minimalPNG(),
+            quad: nil
+        )
+        let p2 = try store.appendPage(
+            sessionId: session.id,
+            originalJPEG: Self.minimalJPEG(),
+            workingPNG: Self.minimalPNG(),
+            quad: nil
+        )
+        try store.reorderPages(sessionId: session.id, pageIds: [p2.id, p0.id, p1.id])
+        XCTAssertEqual(try store.loadSession(id: session.id).pageIds, [p2.id, p0.id, p1.id])
+        XCTAssertEqual(try store.loadPage(sessionId: session.id, pageId: p2.id).index, 0)
+        XCTAssertEqual(try store.loadPage(sessionId: session.id, pageId: p0.id).index, 1)
+        XCTAssertEqual(try store.loadPage(sessionId: session.id, pageId: p1.id).index, 2)
+    }
+
+    func testReorderPagesRejectsNonPermutation() throws {
+        let session = try store.createSession(title: "거부")
+        let p0 = try store.appendPage(
+            sessionId: session.id,
+            originalJPEG: Self.minimalJPEG(),
+            workingPNG: Self.minimalPNG(),
+            quad: nil
+        )
+        XCTAssertThrowsError(try store.reorderPages(sessionId: session.id, pageIds: [p0.id, "missing"])) { error in
+            XCTAssertEqual(error as? SessionStoreError, .invalidPageOrder)
+        }
+    }
+
+    func testDeletePageRemovesFilesAndReindexes() throws {
+        let session = try store.createSession(title: "삭제")
+        let p0 = try store.appendPage(
+            sessionId: session.id,
+            originalJPEG: Self.minimalJPEG(),
+            workingPNG: Self.minimalPNG(),
+            quad: nil
+        )
+        let p1 = try store.appendPage(
+            sessionId: session.id,
+            originalJPEG: Self.minimalJPEG(),
+            workingPNG: Self.minimalPNG(),
+            quad: nil
+        )
+        let p2 = try store.appendPage(
+            sessionId: session.id,
+            originalJPEG: Self.minimalJPEG(),
+            workingPNG: Self.minimalPNG(),
+            quad: nil
+        )
+        let removedDir = store.pageDirPublic(sessionId: session.id, pageId: p1.id)
+        try store.deletePage(sessionId: session.id, pageId: p1.id)
+        XCTAssertEqual(try store.loadSession(id: session.id).pageIds, [p0.id, p2.id])
+        XCTAssertFalse(FileManager.default.fileExists(atPath: removedDir.path))
+        XCTAssertEqual(try store.loadPage(sessionId: session.id, pageId: p0.id).index, 0)
+        XCTAssertEqual(try store.loadPage(sessionId: session.id, pageId: p2.id).index, 1)
+    }
+
     private static func minimalJPEG() -> Data {
         Data(base64Encoded: "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAGcP//EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAQUCf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQMBAT8Bf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQIBAT8Bf//EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEABj8Cf//EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAT8hf//Z")!
     }

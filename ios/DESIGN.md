@@ -24,7 +24,7 @@ ios/
     Camera/                # preview, Vision+rough quad, photo shutter
     Storage/               # SessionStore — sessions/{id}/pages/{pageId}/
     Process/               # PipelineRunner + OrtBackendFactory + PipelineStub(legacy) + stage UI
-    Session/               # grid + PDF CTA
+    Session/               # grid · reorder/delete · 추가 스캔 · PDF CTA · BatchScanPresentation
     Export/                # PdfExporter (cleanedUri → PDFKit)
     CvBridge/              # remap (pure Swift) + inpaintTelea 훅(OpenCV pending)
     Models/                # AppRoute, PipelineStage, ScanSession, Page, Quad, …
@@ -49,7 +49,7 @@ ios/
 - 후속 단계: `cropped.png` / `dewarped.png` / `cleaned.png` (M2 stub는 working→cleaned 복사)
 - PDF: `cleanedUri` 있는 페이지만 `sessions/{id}/export.pdf` ([ARCHITECTURE §6](../ARCHITECTURE.md))
 - 단계 간 JPEG 재인코딩 금지 ([ARCHITECTURE §1.11](../ARCHITECTURE.md))
-- 셔터 → `AVCapturePhotoOutput` JPEG → `appendPage` → stub Process 화면
+- 셔터 → `AVCapturePhotoOutput` JPEG → `appendPage` → 백그라운드 `PipelineRunner`(연속 배치, Camera 코너 `처리 중 N장`) · Session `reorderPages`/`deletePage`
 
 ## 파리티
 
